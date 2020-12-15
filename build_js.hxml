@@ -1,0 +1,4 @@
+--js build/js/main.js
+# --macro jsasync.JSAsync.use()
+
+# -lib jsasync
