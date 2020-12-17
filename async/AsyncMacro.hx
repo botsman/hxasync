@@ -10,9 +10,13 @@ import haxe.macro.Expr;
 using haxe.macro.TypeTools;
 using haxe.macro.ComplexTypeTools;
 using haxe.macro.ExprTools;
+#end
+
+import async.AsyncMacroUtils;
 
 
 class AsyncMacro {
+  #if macro
   macro public static function build(): Array<Field> {
     var fields = Context.getBuildFields();
     for (field in fields) {
@@ -25,12 +29,35 @@ class AsyncMacro {
                 f.expr = addMarker(f.expr);
                 switch (f.expr.expr) {
                   case EBlock(exprs):
-                    "";
+                    for (expr in exprs) {
+                      switch (expr.expr) {
+                        case EBlock(exprs):
+                          for (expr in exprs) {
+                            switch (expr.expr) {
+                              case EReturn(e):
+                                if (e != null) {
+                                  switch (e.expr) {
+                                    case EMeta(s, metaE):
+                                      if (s.name == "await") {
+                                        e.expr = convertToAwait(e).expr;
+                                      }
+                                    default:
+                                      "";
+                                  }
+                                }
+                              default:
+                                continue;
+                            }
+                          }
+                        default:
+                          continue;
+                      }
+                    }
                   default:
                     continue;
                 }
               default:
-                throw "async can be applied only to function";
+                throw "async can be applied only to a function";
             }
           }
         }
@@ -64,5 +91,14 @@ class AsyncMacro {
         throw "Invalid expression";
 		}
   }
+
+  public static function convertToAwait(e: Expr) {
+    return switch (e.expr) {
+      case EMeta(s, metaE):
+        macro AsyncMacroUtils.await(${metaE});
+      default:
+        throw "Invalid expression";
+    }
+  }
+  #end
 }
-#end
