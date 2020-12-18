@@ -1,7 +1,5 @@
 package async;
 
-import async.AsyncMacro;
-
 
 @:build(async.AsyncMacro.build())
 class MyClass {
@@ -10,8 +8,10 @@ class MyClass {
   }
 
   @async public static function hiFunc() {
-    // return @await some();
-    // return AsyncMacroUtils.await(some());
+    var arrowFunc = () -> {
+      trace("Arrow func is executed");
+      @await some();
+    }
     return @await some();
   }
 }

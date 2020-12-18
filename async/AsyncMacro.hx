@@ -2,22 +2,19 @@ package async;
 
 
 #if macro
-import sys.io.File;
-import haxe.macro.Compiler;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 
 using haxe.macro.TypeTools;
 using haxe.macro.ComplexTypeTools;
 using haxe.macro.ExprTools;
-#end
 
-import async.AsyncMacroUtils;
+using async.AsyncMacroUtils;
 
 
 class AsyncMacro {
-  #if macro
   macro public static function build(): Array<Field> {
+    registerFinishCallback();
     var fields = Context.getBuildFields();
     for (field in fields) {
       var meta = field.meta;
@@ -26,7 +23,7 @@ class AsyncMacro {
           if (data.name == "async") {
             switch field.kind {
               case FFun(f):
-                f.expr = addMarker(f.expr);
+                f.expr = addAsyncMarker(f.expr);
                 switch (f.expr.expr) {
                   case EBlock(exprs):
                     for (expr in exprs) {
@@ -39,7 +36,7 @@ class AsyncMacro {
                                   switch (e.expr) {
                                     case EMeta(s, metaE):
                                       if (s.name == "await") {
-                                        e.expr = convertToAwait(e).expr;
+                                        e.expr = convertToAwait(e);
                                       }
                                     default:
                                       "";
@@ -66,6 +63,15 @@ class AsyncMacro {
     return fields;
   }
 
+  public static function onFinishCallback() {
+    trace("I've finished!");
+    trace(Context.getDefines());
+  }
+
+  public static function registerFinishCallback() {
+    Context.onAfterGenerate(onFinishCallback);
+  }
+
   public static function getPlatformFunctionBody(e: Expr) {
     return switch Context.definedValue("target.name") {
       case "js":
@@ -83,7 +89,8 @@ class AsyncMacro {
     }
   }
 
-  public static function addMarker(e: Expr) {
+  public static function addAsyncMarker(e: Expr) {
+    // TODO: add convertion of function type from T to Promise<T>
 		return switch e.expr {
       case EBlock(exprs):
         getPlatformFunctionBody(e);
@@ -93,12 +100,13 @@ class AsyncMacro {
   }
 
   public static function convertToAwait(e: Expr) {
+    // TODO: add await only to Promise<T> type and return T
     return switch (e.expr) {
       case EMeta(s, metaE):
-        macro AsyncMacroUtils.await(${metaE});
+        (macro AsyncMacroUtils.await(${metaE})).expr;
       default:
         throw "Invalid expression";
     }
   }
-  #end
 }
+#end
