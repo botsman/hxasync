@@ -3,7 +3,9 @@ package async;
 
 #if macro
 import haxe.macro.Context;
+import haxe.macro.Compiler;
 import haxe.macro.Expr;
+import sys.io.File;
 
 using haxe.macro.TypeTools;
 using haxe.macro.ComplexTypeTools;
@@ -64,8 +66,17 @@ class AsyncMacro {
   }
 
   public static function onFinishCallback() {
-    trace("I've finished!");
-    trace(Context.getDefines());
+    var sourceCodePath = Compiler.getOutput();
+    var target = Context.definedValue("target.name");
+    var regex: EReg;
+    if (target == "js") {
+      regex = ~//g;
+    } else if (target == "python") {
+      regex = ~//g;
+    }
+    var sourceCode = File.getContent(sourceCodePath);
+    sourceCode = regex.replace(sourceCode, "");
+    File.saveContent(sourceCodePath, sourceCode);
   }
 
   public static function registerFinishCallback() {

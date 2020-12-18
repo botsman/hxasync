@@ -1,6 +1,5 @@
 package async;
 
-
 class AsyncMacroUtils {
   // TODO: make it Promise<T> -> T
   public static extern inline function await<T>(arg: T): T {

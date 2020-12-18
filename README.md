@@ -15,5 +15,6 @@ TODO:
 2.2. When `@await` is applied to expression of type `Promuse<T>`, its type becomes `T`.  
 2.3. Forbid to use `@await` inside syncronous functions (for the beggining it would be enough to ignore that meta tag).
 3. Add async/await keywords depending on some flag for Python (for JS it is always turned on). 
+4. Add linter (+ to CI with tests)
 
 Project is inspired by [hx-jsasync](https://github.com/basro/hx-jsasync) library.  
