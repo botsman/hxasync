@@ -15,6 +15,8 @@ using async.AsyncMacroUtils;
 
 
 class AsyncMacro {
+  public static var asyncPlaceholder = "%asyncPlaceholder%";
+
   macro public static function build(): Array<Field> {
     registerFinishCallback();
     var fields = Context.getBuildFields();
@@ -70,12 +72,12 @@ class AsyncMacro {
     var target = Context.definedValue("target.name");
     var regex: EReg;
     if (target == "js") {
-      regex = ~//g;
+      regex = new EReg('((function|\\w*)?\\s*\\([^()]*\\)\\s*\\{\\s*?)${asyncPlaceholder};\n\\s*', "gm");
     } else if (target == "python") {
-      regex = ~//g;
+      regex = new EReg('(def .*?\\(.*?\\):\\s*)${asyncPlaceholder}\n\\s*', "gm");
     }
     var sourceCode = File.getContent(sourceCodePath);
-    sourceCode = regex.replace(sourceCode, "");
+    sourceCode = regex.replace(sourceCode, "async $1");
     File.saveContent(sourceCodePath, sourceCode);
   }
 
@@ -87,12 +89,12 @@ class AsyncMacro {
     return switch Context.definedValue("target.name") {
       case "js":
         macro @:pos(e.pos) {
-          std.js.Syntax.code("%%asyncPlaceholder%%");
+          std.js.Syntax.code("%asyncPlaceholder%");
           ${e};
         };
       case "python":
         macro @:pos(e.pos) {
-          std.python.Syntax.code("%%asyncPlaceholder%%");
+          std.python.Syntax.code("%asyncPlaceholder%");
           ${e};
         };
       default:
@@ -101,7 +103,6 @@ class AsyncMacro {
   }
 
   public static function addAsyncMarker(e: Expr) {
-    // TODO: add convertion of function type from T to Promise<T>
 		return switch e.expr {
       case EBlock(exprs):
         getPlatformFunctionBody(e);
@@ -111,7 +112,6 @@ class AsyncMacro {
   }
 
   public static function convertToAwait(e: Expr) {
-    // TODO: add await only to Promise<T> type and return T
     return switch (e.expr) {
       case EMeta(s, metaE):
         (macro AsyncMacroUtils.await(${metaE})).expr;

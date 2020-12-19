@@ -8,7 +8,7 @@ class MyClass {
   }
 
   @async public static function hiFunc() {
-    var arrowFunc = () -> {
+    var arrowFunc = @async () -> {
       trace("Arrow func is executed");
       @await some();
     }
