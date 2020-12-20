@@ -22,43 +22,22 @@ class AsyncMacro {
     var fields = Context.getBuildFields();
     for (field in fields) {
       var meta = field.meta;
+      var asyncContext = false;
       if (meta != null) {
         for (data in meta) {
           if (data.name == "async") {
+            asyncContext = true;
             switch field.kind {
               case FFun(f):
-                f.expr = addAsyncMarker(f.expr);
+                transformToAsync(f);
                 switch (f.expr.expr) {
                   case EBlock(exprs):
-                    for (expr in exprs) {
-                      switch (expr.expr) {
-                        case EBlock(exprs):
-                          for (expr in exprs) {
-                            switch (expr.expr) {
-                              case EReturn(e):
-                                if (e != null) {
-                                  switch (e.expr) {
-                                    case EMeta(s, metaE):
-                                      if (s.name == "await") {
-                                        e.expr = convertToAwait(e);
-                                      }
-                                    default:
-                                      "";
-                                  }
-                                }
-                              default:
-                                continue;
-                            }
-                          }
-                        default:
-                          continue;
-                      }
-                    }
+                    handleEBlock(exprs, asyncContext);
                   default:
                     continue;
                 }
               default:
-                throw "async can be applied only to a function";
+                throw "async can be applied only to a function field type";
             }
           }
         }
@@ -66,6 +45,104 @@ class AsyncMacro {
     }
     return fields;
   }
+
+  public static function handleEBlock(eBlockExprs: Array<Expr>, isAsyncContext: Bool) {
+    for (expr in eBlockExprs) {
+      switch (expr.expr) {
+        case EBlock(exprs):
+          handleEBlock(exprs, isAsyncContext);
+        case EMeta(s, e):
+          handleEMeta(expr, isAsyncContext);
+        case EReturn(e):
+          if (e == null) {
+            continue;
+          }
+          switch (e.expr) {
+            case EMeta(s, metaE):
+              handleEMeta(e, isAsyncContext);
+            default:
+              "";
+          }
+        case EVars(vars):
+          handleEVars(vars, isAsyncContext);
+        case ECall(e, params):
+          handleECall(e, params, isAsyncContext);
+        default:
+          continue;
+      }
+    }
+  }
+
+  public static function handleECall(e: Expr, params: Array<Expr>, isAsyncContext: Bool) {
+  }
+
+  public static function handleEVars(eVars: Array<Var>, isAsyncContext: Bool) {
+    for (evar in eVars) {
+      var expr = evar.expr;
+      if (expr == null) {
+        continue;
+      }
+      switch expr.expr {
+        case EMeta(s, e):
+          handleEMeta(expr, isAsyncContext);
+        default:
+          continue;
+      }
+    }
+  }
+
+  public static function handleEMeta(expr: Expr, isAsyncContext: Bool) {
+    switch expr.expr {
+      case EMeta(s, e):
+        if (s.name == "await") {
+          if (!isAsyncContext) {
+            throw "await allowed only inside async function";
+          }
+          expr.expr = transformToAwait(expr);
+        } else if (s.name == "async") {
+          switch e.expr {
+            case EFunction(kind, f):
+              transformToAsync(f);
+              handleEFunction(f, kind, isAsyncContext);
+            default:
+              throw "async only allowed to be used with functions";
+          }
+        } else {
+          switch e.expr {
+            case EReturn(e):
+              handleGeneric(e, isAsyncContext);
+            default:
+              throw "Unexpected expression"; // TODO: handle more expressions
+          }
+        }
+      default:
+        throw "Expr is not EMeta";
+    }
+  }
+
+  public static function handleGeneric(expr: Expr, isAsyncContext: Bool) {
+    // TODO: handle all Expr types
+    return switch expr {
+      default: "";
+    }
+  }
+
+  public static function handleEFunction(fun: Function, kind: FunctionKind, isAsyncContext: Bool) {
+    switch kind {
+      case FNamed(name, inlined):
+        if (inlined) {
+          throw "Inline function can not be async";
+        }
+      default: "";
+    }
+    switch fun.expr.expr {
+      case EBlock(exprs):
+        handleEBlock(exprs, isAsyncContext);
+      default:
+        return;
+    };
+  }
+
 
   public static function onFinishCallback() {
     var sourceCodePath = Compiler.getOutput();
@@ -85,7 +162,7 @@ class AsyncMacro {
     Context.onAfterGenerate(onFinishCallback);
   }
 
-  public static function getPlatformFunctionBody(e: Expr) {
+  public static function getModifiedPlatformFunctionBody(e: Expr) {
     return switch Context.definedValue("target.name") {
       case "js":
         macro @:pos(e.pos) {
@@ -102,16 +179,15 @@ class AsyncMacro {
     }
   }
 
-  public static function addAsyncMarker(e: Expr) {
-		return switch e.expr {
-      case EBlock(exprs):
-        getPlatformFunctionBody(e);
-      default:
-        throw "Invalid expression";
-		}
+  /**
+   * Modifies function body (by adding asyncPlaceholder) and (in future) changes return type from T to Promise<T>
+   * @param {Function} fun -- Function to modify
+   */
+  public static function transformToAsync(fun: Function) {
+    fun.expr = getModifiedPlatformFunctionBody(fun.expr);
   }
 
-  public static function convertToAwait(e: Expr) {
+  public static function transformToAwait(e: Expr) {
     return switch (e.expr) {
       case EMeta(s, metaE):
         (macro AsyncMacroUtils.await(${metaE})).expr;

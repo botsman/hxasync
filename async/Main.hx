@@ -12,6 +12,18 @@ class MyClass {
       trace("Arrow func is executed");
       @await some();
     }
+
+    var arrowFuncWithReturn = @async () -> {
+      trace("Arrow func with explicit return executed");
+      @await some();
+    }
+
+    @async function localFunction() {
+      trace("Local function executed");
+      @await some();
+    }
+    @await arrowFunc();
+    @await some();
     return @await some();
   }
 }
