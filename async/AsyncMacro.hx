@@ -22,20 +22,15 @@ class AsyncMacro {
     var fields = Context.getBuildFields();
     for (field in fields) {
       var meta = field.meta;
-      var asyncContext = false;
+      var isAsyncContext = false;
       if (meta != null) {
         for (data in meta) {
           if (data.name == "async") {
-            asyncContext = true;
+            isAsyncContext = true;
             switch field.kind {
               case FFun(f):
                 transformToAsync(f);
-                switch (f.expr.expr) {
-                  case EBlock(exprs):
-                    handleEBlock(exprs, asyncContext);
-                  default:
-                    continue;
-                }
+                handleAny(f.expr, isAsyncContext);
               default:
                 throw "async can be applied only to a function field type";
             }
@@ -44,51 +39,6 @@ class AsyncMacro {
       }
     }
     return fields;
-  }
-
-  public static function handleEBlock(eBlockExprs: Array<Expr>, isAsyncContext: Bool) {
-    for (expr in eBlockExprs) {
-      switch (expr.expr) {
-        case EBlock(exprs):
-          handleEBlock(exprs, isAsyncContext);
-        case EMeta(s, e):
-          handleEMeta(expr, isAsyncContext);
-        case EReturn(e):
-          if (e == null) {
-            continue;
-          }
-          switch (e.expr) {
-            case EMeta(s, metaE):
-              handleEMeta(e, isAsyncContext);
-            default:
-              "";
-          }
-        case EVars(vars):
-          handleEVars(vars, isAsyncContext);
-        case ECall(e, params):
-          handleECall(e, params, isAsyncContext);
-        default:
-          continue;
-      }
-    }
-  }
-
-  public static function handleECall(e: Expr, params: Array<Expr>, isAsyncContext: Bool) {
-  }
-
-  public static function handleEVars(eVars: Array<Var>, isAsyncContext: Bool) {
-    for (evar in eVars) {
-      var expr = evar.expr;
-      if (expr == null) {
-        continue;
-      }
-      switch expr.expr {
-        case EMeta(s, e):
-          handleEMeta(expr, isAsyncContext);
-        default:
-          continue;
-      }
-    }
   }
 
   public static function handleEMeta(expr: Expr, isAsyncContext: Bool) {
@@ -131,6 +81,14 @@ class AsyncMacro {
         handleAny(e, isAsyncContext);
       case EConst(s):
         null;
+      case EField(e, field):
+        handleAny(e, isAsyncContext);
+      case EVars(vars):
+        for (variable in vars) {
+          handleAny(variable.expr, isAsyncContext);
+        }
+      case null:
+        null;
       case other:
         throw 'Unexpected expression ${other}';
     }
@@ -142,14 +100,10 @@ class AsyncMacro {
         if (inlined) {
           throw "Inline function can not be async";
         }
-      default: "";
-    }
-    switch fun.expr.expr {
-      case EBlock(exprs):
-        handleEBlock(exprs, isAsyncContext);
       default:
-        return;
-    };
+        null;
+    }
+    handleAny(fun.expr, isAsyncContext);
   }
 
 
