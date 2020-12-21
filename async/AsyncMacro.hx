@@ -103,27 +103,36 @@ class AsyncMacro {
           switch e.expr {
             case EFunction(kind, f):
               transformToAsync(f);
-              handleEFunction(f, kind, isAsyncContext);
+              handleEFunction(f, kind, true);
             default:
               throw "async only allowed to be used with functions";
           }
         } else {
-          switch e.expr {
-            case EReturn(e):
-              handleGeneric(e, isAsyncContext);
-            default:
-              throw "Unexpected expression"; // TODO: handle more expressions
-          }
+          handleAny(e, isAsyncContext);
         }
       default:
+        trace(expr);
         throw "Expr is not EMeta";
     }
   }
 
-  public static function handleGeneric(expr: Expr, isAsyncContext: Bool) {
-    // TODO: handle all Expr types
-    return switch expr {
-      default: "";
+  public static function handleAny(expr: Expr, isAsyncContext: Bool) {
+    // TODO: handle more Expr types
+    return switch expr.expr {
+      case EReturn(e):
+        handleAny(e, isAsyncContext);
+      case EMeta(s, e):
+        handleEMeta(expr, isAsyncContext);  // TODO: fix 1st arg
+      case EBlock(exprs):
+        for (expr in exprs) {
+          handleAny(expr, isAsyncContext);
+        }
+      case ECall(e, params):
+        handleAny(e, isAsyncContext);
+      case EConst(s):
+        null;
+      case other:
+        throw 'Unexpected expression ${other}';
     }
   }
 
