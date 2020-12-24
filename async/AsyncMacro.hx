@@ -48,7 +48,7 @@ class AsyncMacro {
           if (!isAsyncContext) {
             throw "await allowed only inside async function";
           }
-          expr.expr = transformToAwait(expr);
+          transformToAwait(expr);
         } else if (s.name == "async") {
           switch e.expr {
             case EFunction(kind, f):
@@ -61,13 +61,15 @@ class AsyncMacro {
           handleAny(e, isAsyncContext);
         }
       default:
-        trace(expr);
         throw "Expr is not EMeta";
     }
   }
 
   public static function handleAny(expr: Expr, isAsyncContext: Bool) {
     // TODO: handle more Expr types
+    if (expr == null) {
+      return null;
+    }
     return switch expr.expr {
       case EReturn(e):
         handleAny(e, isAsyncContext);
@@ -86,6 +88,12 @@ class AsyncMacro {
       case EVars(vars):
         for (variable in vars) {
           handleAny(variable.expr, isAsyncContext);
+        }
+      case EFunction(kind, f):
+        handleEFunction(f, kind, false);
+      case EObjectDecl(fields):
+        for (field in fields) {
+          handleAny(field.expr, isAsyncContext);
         }
       case null:
         null;
@@ -142,18 +150,54 @@ class AsyncMacro {
     }
   }
 
+  public static function makeExplicitReturn(fun: Function) {
+    switch fun.expr.expr {
+      case EBlock(outerExprs):
+        var lastExpr = outerExprs[outerExprs.length - 1];
+        switch lastExpr.expr {
+          case EBlock(exprs):
+            var lastFunctionExpr = exprs[exprs.length - 1];
+            switch lastFunctionExpr.expr {
+              case EReturn(e):
+                return;
+              case EMeta(s, e):
+                exprs[exprs.length - 1] = {
+                  expr: EReturn({
+                    pos: lastFunctionExpr.pos,
+                    expr: lastFunctionExpr.expr
+                  }),
+                  pos: lastFunctionExpr.pos
+                };
+              default:
+                exprs.push({
+                  expr: EReturn({
+                    pos: lastFunctionExpr.pos,
+                    expr: EConst(CInt("null"))
+                  }),
+                  pos: lastFunctionExpr.pos
+                });
+            }
+          default:
+            null;
+        }
+      default:
+        null;
+    }
+  }
+
   /**
    * Modifies function body (by adding asyncPlaceholder) and (in future) changes return type from T to Promise<T>
    * @param {Function} fun -- Function to modify
    */
   public static function transformToAsync(fun: Function) {
     fun.expr = getModifiedPlatformFunctionBody(fun.expr);
+    makeExplicitReturn(fun);
   }
 
   public static function transformToAwait(e: Expr) {
-    return switch (e.expr) {
+    switch (e.expr) {
       case EMeta(s, metaE):
-        (macro AsyncMacroUtils.await(${metaE})).expr;
+        e.expr = (macro AsyncMacroUtils.await(${metaE})).expr;
       default:
         throw "Invalid expression";
     }

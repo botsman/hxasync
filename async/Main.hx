@@ -7,6 +7,11 @@ class MyClass {
     return "some func called";
   }
 
+  @async public static function funcWithCallback(callback) {
+    trace("Calling a callback");
+    @await callback("result");
+  }
+
   @async public static function hiFunc() {
     var arrowFunc = @async () -> {
       trace("Arrow func is executed");
@@ -24,12 +29,18 @@ class MyClass {
     }
     @await arrowFunc();
     @await some();
-    return @await some();
+
+    var callback = @async function(arg: String) {
+      trace(arg);
+    };
+    @await funcWithCallback(callback);
+
+    return "asd";
   }
 }
 
 class Main {
-  @async static public function main(): Void {
-    @await MyClass.hiFunc();
+  static public function main(): Void {
+    MyClass.hiFunc();
   }
 }
