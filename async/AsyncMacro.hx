@@ -74,7 +74,7 @@ class AsyncMacro {
       case EReturn(e):
         handleAny(e, isAsyncContext);
       case EMeta(s, e):
-        handleEMeta(expr, isAsyncContext);  // TODO: fix 1st arg
+        handleEMeta(expr, isAsyncContext);
       case EBlock(exprs):
         for (expr in exprs) {
           handleAny(expr, isAsyncContext);
@@ -95,6 +95,10 @@ class AsyncMacro {
         for (field in fields) {
           handleAny(field.expr, isAsyncContext);
         }
+      case EParenthesis(e):
+        handleAny(e, isAsyncContext);
+      case ECheckType(e, t):
+        handleAny(e, isAsyncContext);
       case null:
         null;
       case other:
@@ -161,19 +165,18 @@ class AsyncMacro {
               case EReturn(e):
                 return;
               case EMeta(s, e):
-                exprs[exprs.length - 1] = {
-                  expr: EReturn({
-                    pos: lastFunctionExpr.pos,
-                    expr: lastFunctionExpr.expr
-                  }),
-                  pos: lastFunctionExpr.pos
-                };
+                if (s.name == "await") {
+                  exprs[exprs.length - 1] = {
+                    expr: EReturn({
+                      pos: lastFunctionExpr.pos,
+                      expr: lastFunctionExpr.expr  // return last awaited expression
+                    }),
+                    pos: lastFunctionExpr.pos
+                  };
+                }
               default:
                 exprs.push({
-                  expr: EReturn({
-                    pos: lastFunctionExpr.pos,
-                    expr: EConst(CInt("null"))
-                  }),
+                  expr: EReturn(macro @:pos(lastFunctionExpr.pos) return (null: Dynamic)), // return Null
                   pos: lastFunctionExpr.pos
                 });
             }
@@ -194,9 +197,22 @@ class AsyncMacro {
     makeExplicitReturn(fun);
   }
 
+  public static function processAwaitedFuncArgs(expr: Expr) {
+    switch expr.expr {
+      case ECall(e, params):
+        handleAny(e, false);
+        for (param in params) {
+          handleAny(param, false);
+        }
+      default:
+        null;
+    }
+  }
+
   public static function transformToAwait(e: Expr) {
     switch (e.expr) {
       case EMeta(s, metaE):
+        processAwaitedFuncArgs(metaE);
         e.expr = (macro AsyncMacroUtils.await(${metaE})).expr;
       default:
         throw "Invalid expression";

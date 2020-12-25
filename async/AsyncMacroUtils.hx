@@ -11,3 +11,5 @@ class AsyncMacroUtils {
     #end
   }
 }
+
+abstract ReturnVoid(Dynamic) {}

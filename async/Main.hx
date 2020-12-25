@@ -1,5 +1,7 @@
 package async;
 
+import async.AsyncMacroUtils;
+
 
 @:build(async.AsyncMacro.build())
 class MyClass {
@@ -35,6 +37,9 @@ class MyClass {
     };
     @await funcWithCallback(callback);
 
+    @await funcWithCallback(@async function(arg: String) {
+      trace(arg);
+    });
     return "asd";
   }
 }
