@@ -18,6 +18,14 @@ class AsyncMacro {
   public static var asyncPlaceholder = "%asyncPlaceholder%";
 
   macro public static function build(): Array<Field> {
+    var targetName = Context.definedValue("target.name");
+    if (!["python", "js"].contains(targetName)) {
+      return null;
+    }
+    if (targetName == "python" && Context.definedValue("python-sync") == "1") {
+      trace("\"python-sync\" flag is set. Ignoring async/await keywords");
+      return null;
+    }
     registerFinishCallback();
     var fields = Context.getBuildFields();
     for (field in fields) {
@@ -169,14 +177,15 @@ class AsyncMacro {
                   exprs[exprs.length - 1] = {
                     expr: EReturn({
                       pos: lastFunctionExpr.pos,
-                      expr: lastFunctionExpr.expr  // return last awaited expression
+                      // expr: lastFunctionExpr.expr  // return last awaited expression
+                      expr: EReturn(macro @:pos(lastFunctionExpr.pos) return (null: ReturnVoid))
                     }),
                     pos: lastFunctionExpr.pos
                   };
                 }
               default:
                 exprs.push({
-                  expr: EReturn(macro @:pos(lastFunctionExpr.pos) return (null: Dynamic)), // return Null
+                  expr: EReturn(macro @:pos(lastFunctionExpr.pos) return (null: ReturnVoid)), // return Null
                   pos: lastFunctionExpr.pos
                 });
             }

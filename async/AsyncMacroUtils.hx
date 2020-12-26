@@ -12,4 +12,8 @@ class AsyncMacroUtils {
   }
 }
 
-abstract ReturnVoid(Dynamic) {}
+abstract ReturnVoid(Dynamic) {
+  inline public function new(value: Dynamic) {
+    this = null;
+  }
+}
