@@ -1,4 +1,4 @@
-package async;
+package hxasync;
 
 
 #if macro
@@ -10,8 +10,8 @@ import sys.io.File;
 using haxe.macro.TypeTools;
 using haxe.macro.ComplexTypeTools;
 using haxe.macro.ExprTools;
+using hxasync.AsyncMacroUtils;
 
-using async.AsyncMacroUtils;
 
 
 class AsyncMacro {
@@ -178,14 +178,14 @@ class AsyncMacro {
                     expr: EReturn({
                       pos: lastFunctionExpr.pos,
                       // expr: lastFunctionExpr.expr  // return last awaited expression
-                      expr: EReturn(macro @:pos(lastFunctionExpr.pos) return (null: ReturnVoid))
+                      expr: EReturn(macro @:pos(lastFunctionExpr.pos) return (null: hxasync.NoReturn))
                     }),
                     pos: lastFunctionExpr.pos
                   };
                 }
               default:
                 exprs.push({
-                  expr: EReturn(macro @:pos(lastFunctionExpr.pos) return (null: ReturnVoid)), // return Null
+                  expr: EReturn(macro @:pos(lastFunctionExpr.pos) return (null: hxasync.NoReturn)), // return Null
                   pos: lastFunctionExpr.pos
                 });
             }
@@ -222,7 +222,7 @@ class AsyncMacro {
     switch (e.expr) {
       case EMeta(s, metaE):
         processAwaitedFuncArgs(metaE);
-        e.expr = (macro AsyncMacroUtils.await(${metaE})).expr;
+        e.expr = (macro hxasync.AsyncMacroUtils.await(${metaE})).expr;
       default:
         throw "Invalid expression";
     }

@@ -1,4 +1,5 @@
-package async;
+package hxasync;
+
 
 class AsyncMacroUtils {
   public static extern inline function await<T>(arg: T): T {
@@ -9,11 +10,5 @@ class AsyncMacroUtils {
     #else
     return arg;
     #end
-  }
-}
-
-abstract ReturnVoid(Dynamic) {
-  inline public function new(value: Dynamic) {
-    this = null;
   }
 }

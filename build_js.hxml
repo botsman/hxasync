@@ -1,3 +1,0 @@
---js build/js/main.js
--D js-es=6
--D shallow-expose

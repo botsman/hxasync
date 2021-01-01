@@ -1,10 +1,8 @@
-package async;
-
-import async.AsyncMacroUtils;
+package tests;
 
 
-@:build(async.AsyncMacro.build())
-class MyClass {
+@:build(hxasync.AsyncMacro.build())
+class Tests {
   @async public static function some() {
     return "some func called";
   }
@@ -42,10 +40,8 @@ class MyClass {
     });
     return "asd";
   }
-}
 
-class Main {
   static public function main(): Void {
-    MyClass.hiFunc();
+    @await Tests.hiFunc();
   }
 }

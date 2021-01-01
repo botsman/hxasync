@@ -1,0 +1,25 @@
+--main tests.Tests
+--library hxasync
+
+--each
+
+# js build
+--js build/js/main.js
+-D js-es=6
+-D shallow-expose
+
+--next
+
+# python build
+--python build/py/main.py
+
+--next
+
+# python sync build (macros meta tags are igored and no changes are made)
+--python build/py_sync/main.py
+-D python-sync
+
+--next
+
+# java (== other) build
+--java build/java/
