@@ -1,0 +1,45 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Haxe
+        run: |
+          sudo add-apt-repository ppa:haxe/releases -y
+          sudo apt-get update
+          sudo apt-get install haxe -y
+          mkdir ~/haxelib && haxelib setup ~/haxelib
+
+      - name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install NodeJS
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      # - name: Install Java
+      #   uses: actions/setup-java@v1
+      #   with:
+      #     java-version: '8'
+
+      - name: Compile targets
+        run: |
+          ls
+          haxelib dev hxasync `pwd`
+
+      - name: Test Python
+        run: |
+          echo "Running python tests"
+
+      - name: Test NodeJS
+        run: |
+          echo "Running NodeJS tests"
