@@ -19,26 +19,24 @@ class AsyncMacro {
 
   macro public static function build(): Array<Field> {
     var targetName = Context.definedValue("target.name");
-    if (!["python", "js"].contains(targetName)) {
+    if (Context.definedValue("sync") == "1") {
+      trace("\"sync\" flag is set. Ignoring async/await keywords");
       return null;
     }
-    if (targetName == "python" && Context.definedValue("python-sync") == "1") {
-      trace("\"python-sync\" flag is set. Ignoring async/await keywords");
+    if (!["python", "js", "cs"].contains(targetName)) {
       return null;
     }
     registerFinishCallback();
     var fields = Context.getBuildFields();
     for (field in fields) {
       var meta = field.meta;
-      var isAsyncContext = false;
       if (meta != null) {
         for (data in meta) {
           if (data.name == "async") {
-            isAsyncContext = true;
             switch field.kind {
               case FFun(f):
                 transformToAsync(f);
-                handleAny(f.expr, isAsyncContext);
+                handleAny(f.expr, true);
               default:
                 throw "async can be applied only to a function field type";
             }
@@ -162,6 +160,10 @@ class AsyncMacro {
     }
   }
 
+  public static function getModifiedFunctionReturnType(ret: Null<ComplexType>): Awaitable<Null<ComplexType>> {
+    return cast ret;
+  }
+
   public static function makeExplicitReturn(fun: Function) {
     switch fun.expr.expr {
       case EBlock(outerExprs):
@@ -203,6 +205,7 @@ class AsyncMacro {
    */
   public static function transformToAsync(fun: Function) {
     fun.expr = getModifiedPlatformFunctionBody(fun.expr);
+    fun.ret = getModifiedFunctionReturnType(fun.ret);
     makeExplicitReturn(fun);
   }
 

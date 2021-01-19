@@ -17,7 +17,7 @@
 
 # python sync build (macros meta tags are igored and no changes are made)
 --python build/py_sync/main.py
--D python-sync
+-D sync
 
 --next
 
