@@ -105,6 +105,29 @@ class AsyncMacro {
         handleAny(e, isAsyncContext);
       case ECheckType(e, t):
         handleAny(e, isAsyncContext);
+      case EIf(econd, eif, eelse):
+        handleAny(econd, isAsyncContext);
+        handleAny(eif, isAsyncContext);
+        handleAny(eelse, isAsyncContext);
+      case EBinop(op, e1, e2):
+        handleAny(e1, isAsyncContext);
+        handleAny(e2, isAsyncContext);
+      case EThrow(e):
+        handleAny(e, isAsyncContext);
+      case ENew(t, params):
+        for (param in params) {
+          handleAny(param, isAsyncContext);
+        }
+      case EArrayDecl(values):
+        for (val in values) {
+          handleAny(val, isAsyncContext);
+        }
+      case EFor(it, expr):
+        handleAny(it, isAsyncContext);
+        handleAny(expr, isAsyncContext);
+      case EArray(e1, e2):
+        handleAny(e1, isAsyncContext);
+        handleAny(e2, isAsyncContext);
       case null:
         null;
       case other:
@@ -160,8 +183,8 @@ class AsyncMacro {
     }
   }
 
-  public static function getModifiedFunctionReturnType(ret: Null<ComplexType>): Awaitable<Null<ComplexType>> {
-    return cast ret;
+  public static function getModifiedFunctionReturnType(ret: Null<ComplexType>): Null<ComplexType> {
+    return null; // TODO: fix
   }
 
   public static function makeExplicitReturn(fun: Function) {
@@ -175,16 +198,20 @@ class AsyncMacro {
               case EReturn(e):
                 return;
               case EMeta(s, e):
-                if (s.name == "await") {
-                  exprs[exprs.length - 1] = {
-                    expr: EReturn({
-                      pos: lastFunctionExpr.pos,
-                      // expr: lastFunctionExpr.expr  // return last awaited expression
-                      expr: EReturn(macro @:pos(lastFunctionExpr.pos) return (null: hxasync.NoReturn))
-                    }),
-                    pos: lastFunctionExpr.pos
-                  };
-                }
+                // if (s.name == "await") {
+                //   exprs[exprs.length - 1] = {
+                //     expr: EReturn({
+                //       pos: lastFunctionExpr.pos,
+                //       // expr: lastFunctionExpr.expr  // return last awaited expression
+                //       expr: EReturn(macro @:pos(lastFunctionExpr.pos) return (null: hxasync.NoReturn))
+                //     }),
+                //     pos: lastFunctionExpr.pos
+                //   };
+                // }
+                exprs.push({
+                  expr: EReturn(macro @:pos(lastFunctionExpr.pos) return (null: hxasync.NoReturn)), // return Null
+                  pos: lastFunctionExpr.pos
+                });
               default:
                 exprs.push({
                   expr: EReturn(macro @:pos(lastFunctionExpr.pos) return (null: hxasync.NoReturn)), // return Null

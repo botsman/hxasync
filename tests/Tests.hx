@@ -41,7 +41,7 @@ class Tests {
     return "asd";
   }
 
-  static public function main(): Void {
+  @async static public function main() {
     @await Tests.hiFunc();
   }
 }
