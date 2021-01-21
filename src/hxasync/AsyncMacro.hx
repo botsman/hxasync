@@ -128,6 +128,16 @@ class AsyncMacro {
       case EArray(e1, e2):
         handleAny(e1, isAsyncContext);
         handleAny(e2, isAsyncContext);
+      case EUnop(op, postFix, e):
+        handleAny(e, isAsyncContext);
+      case ESwitch(e, cases, edef):
+        handleAny(e, isAsyncContext);
+        for (cs in cases) {
+          handleAny(cs.expr, isAsyncContext);
+        }
+        handleAny(edef, isAsyncContext);
+      case ECast(e, t):
+        handleAny(e, isAsyncContext);
       case null:
         null;
       case other:
