@@ -2,7 +2,10 @@ package tests;
 
 
 @:build(hxasync.AsyncMacro.build())
-class Tests {
+class Cases {
+  public function new() {}
+
+  var a: String = "a";
   @async public static function some() {
     return "some func called";
   }
@@ -12,7 +15,7 @@ class Tests {
     @await callback("result");
   }
 
-  @async public static function hiFunc() {
+  @async public function hiFunc() {
     var arrowFunc = @async () -> {
       trace("Arrow func is executed");
       @await some();
@@ -38,10 +41,30 @@ class Tests {
     @await funcWithCallback(@async function(arg: String) {
       trace(arg);
     });
-    return "asd";
-  }
 
+    var funcWithDefaults = @async function(a: String = "asd") {
+      trace("funcWithDefaults called");
+    }
+    @await funcWithDefaults();
+
+    var firstLevelFunc = @async function() {
+      trace("called on first level");
+      var secondLevelFunc = @async function() {
+        trace("called on a second level");
+        trace(this.a);
+      }
+      @await secondLevelFunc();
+    }
+
+    @await firstLevelFunc();
+  }
+}
+
+
+@:build(hxasync.AsyncMacro.build())
+class Tests {
   @async static public function main() {
-    @await Tests.hiFunc();
+    var cases = new Cases();
+    @await cases.hiFunc();
   }
 }
