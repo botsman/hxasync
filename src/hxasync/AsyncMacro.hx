@@ -138,6 +138,12 @@ class AsyncMacro {
         handleAny(edef, isAsyncContext);
       case ECast(e, t):
         handleAny(e, isAsyncContext);
+      case EContinue:
+        null;
+      case ETernary(econd, eif, eelse):
+        handleAny(econd, isAsyncContext);
+        handleAny(eif, isAsyncContext);
+        handleAny(eelse, isAsyncContext);
       case null:
         null;
       case other:
