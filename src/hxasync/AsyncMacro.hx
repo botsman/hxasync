@@ -157,18 +157,78 @@ class AsyncMacro {
     handleAny(fun.expr, isAsyncContext);
   }
 
+  public static function fixJavaScriptOutput(content: String): String {
+    var regex = new EReg('${asyncPlaceholder};\\s*', "gm");
+    // split code by placeholder first (and remove extra newline to keep a code pretty)
+    var codeParts = regex.split(content);
+    // -1 because we don't need to do any parsing to the last splitted result
+    for (codeIndex in 0...(codeParts.length - 1)) {
+      var codePart = codeParts[codeIndex];
+      var splitPattern = "\n";
+      var codeSubparts = (new EReg(splitPattern, "gm")).split(codePart);
+
+      var functionRegex = new EReg("((function|\\w*)?\\s*\\([^()]*\\)\\s*\\{)", "");
+      // From the regex point of view, expression
+      // if(a == null) {
+      // does not differ from function
+      // someFunction(a == null) {
+      // that's why I decided to look from the bottom-up to the first opening bracket without pair:
+      // let funcWithDefaults = function(a) {
+      //   if(a == null) {
+      //     a = "asd";
+      //   }
+      // match it against function regex and add `async` keyword there
+      // counter is to maintan count of open and closed brackets
+      var counter = 0;
+      for (subcodeIndex in 0...codeSubparts.length) {
+        var line = codeSubparts[codeSubparts.length - subcodeIndex - 1];
+        counter = counter + (AsyncMacroUtils.count(line, "}") - AsyncMacroUtils.count(line, "{"));
+        if (counter < 0) {
+          if (functionRegex.match(line)) {
+            codeSubparts[codeSubparts.length - subcodeIndex - 1] = functionRegex.replace(line, "async $1");
+            codeParts[codeIndex] = codeSubparts.join(splitPattern);
+            break;
+          }
+        }
+      }
+    }
+    return codeParts.join("");
+  }
+
+  public static function fixPythonOutput(content: String): String {
+    var regex = new EReg('${asyncPlaceholder}\\s*', "gm");
+    // split code by placeholder first (and remove extra newline to keep a code pretty)
+    var codeParts = regex.split(content);
+    // -1 because we don't need to do any parsing to the last splitted result
+    for (codeIndex in 0...(codeParts.length - 1)) {
+      var codePart = codeParts[codeIndex];
+      // split evry part by lines and iterate from the last to first
+      var splitPattern = "\n";
+      var codeSubparts = (new EReg(splitPattern, "gm")).split(codePart);
+      var functionRegex = new EReg("(def .*?\\(.*?\\):)", "");
+      for (subcodeIndex in 0...codeSubparts.length) {
+        var line = codeSubparts[codeSubparts.length - subcodeIndex - 1];
+        if (functionRegex.match(line)) {
+          codeSubparts[codeSubparts.length - subcodeIndex - 1] = functionRegex.replace(line, "async $1");
+          codeParts[codeIndex] = codeSubparts.join(splitPattern);
+          break;
+        }
+      }
+    }
+    return codeParts.join("");
+  }
+
 
   public static function onFinishCallback() {
     var sourceCodePath = Compiler.getOutput();
     var target = Context.definedValue("target.name");
     var regex: EReg;
-    if (target == "js") {
-      regex = new EReg('((function|\\w*)?\\s*\\([^()]*\\)\\s*\\{\\s*?)${asyncPlaceholder};\n\\s*', "gm");
-    } else if (target == "python") {
-      regex = new EReg('(def .*?\\(.*?\\):\\s*)${asyncPlaceholder}\n\\s*', "gm");
-    }
     var sourceCode = File.getContent(sourceCodePath);
-    sourceCode = regex.replace(sourceCode, "async $1");
+    if (target == "js") {
+      sourceCode = AsyncMacro.fixJavaScriptOutput(sourceCode);
+    } else if (target == "python") {
+      sourceCode = AsyncMacro.fixPythonOutput(sourceCode);
+    }
     File.saveContent(sourceCodePath, sourceCode);
   }
 

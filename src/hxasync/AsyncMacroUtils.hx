@@ -11,4 +11,16 @@ class AsyncMacroUtils {
     return cast arg;
     #end
   }
+
+  #if macro
+  public static inline function count(text: String, char: String): Int {
+    var counter = 0;
+    for (ch in text.split("")) {
+      if (ch == char) {
+        counter++;
+      }
+    }
+    return counter;
+  }
+  #end
 }
