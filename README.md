@@ -83,8 +83,8 @@ I tried to keep the implementation as close as possible to the native target pla
 ## Usage
 
 In order to start using this macros, you need to:
-1. Install the library: ``
-2. Add the library to your project when compiling a project
+1. Install the library: `haxelib install hxasync`
+2. Add the library to your project when compiling a project: `-lib hxasync`
 3. To enable `async` and `await` for your class:
    - use build or autobuild macros: 
    ```

@@ -1,5 +1,5 @@
 package hxasync;
 
 
-@:build(hxasync.AsyncMacro.build())
+@:autoBuild(hxasync.AsyncMacro.build())
 interface Asyncable {}
