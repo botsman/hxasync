@@ -80,4 +80,20 @@ Instead of using bare `async` and `await` keywords, I had to use Haxe meta-tags 
 I tried to keep the implementation as close as possible to the native target platforms implementation.
 
 
+## Usage
+
+In order to start using this macros, you need to:
+1. Install the library: ``
+2. Add the library to your project when compiling a project
+3. To enable `async` and `await` for your class:
+   - use build or autobuild macros: 
+   ```
+   @:build(hxasync.AsyncMacro.build())
+   class MyClass {}
+   ```
+   - implement `Asyncable` interface: 
+   ```
+   class MyClass implements hxasync.Asyncable {}
+   ```
+
 Project is inspired by [hx-jsasync](https://github.com/basro/hx-jsasync) library.  
