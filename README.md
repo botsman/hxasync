@@ -95,5 +95,6 @@ In order to start using this macros, you need to:
    ```
    class MyClass implements hxasync.Asyncable {}
    ```
+   - apply AsyncMacro to all classes in a specified package: `--macro hxasync.AsyncMacro.makeAsyncable("")`
 
 Project is inspired by [hx-jsasync](https://github.com/basro/hx-jsasync) library.  
