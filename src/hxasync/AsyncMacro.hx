@@ -15,15 +15,16 @@ using hxasync.AsyncMacroUtils;
 
 
 class AsyncMacro {
+  public static var callbackRegistered: Bool = false;
+  public static var notificationSent: Bool = false;
   public static var asyncPlaceholder = "%asyncPlaceholder%";
 
   macro public static function build(): Array<Field> {
     var targetName = Context.definedValue("target.name");
-    if (Context.definedValue("sync") == "1") {
-      trace("\"sync\" flag is set. Ignoring async/await keywords");
+    if (isSync()) {
       return null;
     }
-    if (!["python", "js", "cs"].contains(targetName)) {
+    if (!["python", "js"].contains(targetName)) {
       return null;
     }
     registerFinishCallback();
@@ -45,6 +46,21 @@ class AsyncMacro {
       }
     }
     return fields;
+  }
+
+  static function makeAsyncable(pathFilter: String) {
+    Compiler.addGlobalMetadata(pathFilter, "@:build(hxasync.AsyncMacro.build())");
+  }
+
+  public static function isSync(): Bool {
+    if (Context.definedValue("sync") == "1") {
+      if (!notificationSent) {
+        trace("\"sync\" flag is set. Ignoring async/await keywords");
+      }
+      notificationSent = true;
+      return true;
+    }
+    return false;
   }
 
   public static function handleEMeta(expr: Expr, isAsyncContext: Bool) {
@@ -239,6 +255,10 @@ class AsyncMacro {
   }
 
   public static function registerFinishCallback() {
+    if (callbackRegistered) {
+      return;
+    }
+    callbackRegistered = true;
     Context.onAfterGenerate(onFinishCallback);
   }
 

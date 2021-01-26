@@ -1,7 +1,6 @@
 package tests;
 
 
-@:build(hxasync.AsyncMacro.build())
 class Cases {
   public function new() {}
 
@@ -61,7 +60,6 @@ class Cases {
 }
 
 
-@:build(hxasync.AsyncMacro.build())
 class Tests {
   @async static public function main() {
     var cases = new Cases();

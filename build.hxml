@@ -1,5 +1,6 @@
 --main tests.Tests
 --library hxasync
+--macro hxasync.AsyncMacro.makeAsyncable("")
 
 --each
 
