@@ -1,6 +1,5 @@
 package hxasync;
 
-
 #if macro
 import haxe.macro.Context;
 import haxe.macro.Compiler;
@@ -11,8 +10,6 @@ using haxe.macro.TypeTools;
 using haxe.macro.ComplexTypeTools;
 using haxe.macro.ExprTools;
 using hxasync.AsyncMacroUtils;
-
-
 
 class AsyncMacro {
   public static var callbackRegistered: Bool = false;
@@ -203,11 +200,15 @@ class AsyncMacro {
       // counter is to maintan count of open and closed brackets
       var counter = 0;
       for (subcodeIndex in 0...codeSubparts.length) {
-        var line = codeSubparts[codeSubparts.length - subcodeIndex - 1];
+        var line = codeSubparts[
+          codeSubparts.length - subcodeIndex - 1
+        ];
         counter = counter + (AsyncMacroUtils.count(line, "}") - AsyncMacroUtils.count(line, "{"));
         if (counter < 0) {
           if (functionRegex.match(line)) {
-            codeSubparts[codeSubparts.length - subcodeIndex - 1] = functionRegex.replace(line, "async $1");
+            codeSubparts[
+              codeSubparts.length - subcodeIndex - 1
+            ] = functionRegex.replace(line, "async $1");
             codeParts[codeIndex] = codeSubparts.join(splitPattern);
             break;
           }
@@ -229,9 +230,13 @@ class AsyncMacro {
       var codeSubparts = (new EReg(splitPattern, "gm")).split(codePart);
       var functionRegex = new EReg("(def .*?\\(.*?\\):)", "");
       for (subcodeIndex in 0...codeSubparts.length) {
-        var line = codeSubparts[codeSubparts.length - subcodeIndex - 1];
+        var line = codeSubparts[
+          codeSubparts.length - subcodeIndex - 1
+        ];
         if (functionRegex.match(line)) {
-          codeSubparts[codeSubparts.length - subcodeIndex - 1] = functionRegex.replace(line, "async $1");
+          codeSubparts[
+            codeSubparts.length - subcodeIndex - 1
+          ] = functionRegex.replace(line, "async $1");
           codeParts[codeIndex] = codeSubparts.join(splitPattern);
           break;
         }
@@ -239,7 +244,6 @@ class AsyncMacro {
     }
     return codeParts.join("");
   }
-
 
   public static function onFinishCallback() {
     var sourceCodePath = Compiler.getOutput();
@@ -305,12 +309,14 @@ class AsyncMacro {
                 //   };
                 // }
                 exprs.push({
-                  expr: EReturn(macro @:pos(lastFunctionExpr.pos) return (null: hxasync.NoReturn)), // return Null
+                  expr: EReturn(macro
+                    @:pos(lastFunctionExpr.pos) return (null : hxasync.NoReturn)), // return Null
                   pos: lastFunctionExpr.pos
                 });
               default:
                 exprs.push({
-                  expr: EReturn(macro @:pos(lastFunctionExpr.pos) return (null: hxasync.NoReturn)), // return Null
+                  expr: EReturn(macro
+                    @:pos(lastFunctionExpr.pos) return (null : hxasync.NoReturn)), // return Null
                   pos: lastFunctionExpr.pos
                 });
             }

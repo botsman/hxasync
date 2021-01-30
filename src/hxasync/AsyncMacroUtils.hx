@@ -1,6 +1,5 @@
 package hxasync;
 
-
 class AsyncMacroUtils {
   public static extern inline function await<T>(arg: Awaitable<T>): T {
     #if js
