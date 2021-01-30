@@ -1,68 +1,65 @@
 package tests;
 
-
 class Cases {
+  public var some = "some variable";
+
   public function new() {}
 
-  var a: String = "a";
-  @async public static function some() {
-    return "some func called";
+  @async public static function testBasic() {
+    return "basic func called";
   }
 
-  @async public static function funcWithCallback(callback) {
-    trace("Calling a callback");
-    @await callback("result");
+  @async public static function testFuncWithCallback() {
+    var callback = @async function callbackFunction() {
+      trace("callback is called");
+    }
+    var functionAcceptingCallback = @async function(callback) {
+      @await callback();
+    }
+
+    @await functionAcceptingCallback(callback);
   }
 
-  @async public function hiFunc() {
-    var arrowFunc = @async () -> {
-      trace("Arrow func is executed");
-      @await some();
+  @async public static function testArrowFunction() {
+    var arrowFunction = @async () -> {
+      trace("arrow function called");
     }
 
-    var arrowFuncWithReturn = @async () -> {
-      trace("Arrow func with explicit return executed");
-      @await some();
+    @await arrowFunction();
+  }
+
+  @async public static function testFunctionWithDefaultArgs() {
+    var funcWithOneDefaultArg = @async function(a: String = "some") {
+      trace('Default arg: ${a}');
+    }
+    @await funcWithOneDefaultArg();
+
+    var funcWithTwoDefaultArgs = @async function(a: String = "some", b: String = "another") {
+      trace('Default args: ${a} and ${b}');
+    }
+    @await funcWithTwoDefaultArgs();
+  }
+
+  @async public function testNestedFunction() {
+    var nestedFunction = @async function() {
+      trace(this.some);
     }
 
-    @async function localFunction() {
-      trace("Local function executed");
-      @await some();
-    }
-    @await arrowFunc();
-    @await some();
+    @await nestedFunction();
+  }
 
-    var callback = @async function(arg: String) {
-      trace(arg);
-    };
-    @await funcWithCallback(callback);
-
-    @await funcWithCallback(@async function(arg: String) {
-      trace(arg);
-    });
-
-    var funcWithDefaults = @async function(a: String = "asd") {
-      trace("funcWithDefaults called");
-    }
-    @await funcWithDefaults();
-
-    var firstLevelFunc = @async function() {
-      trace("called on first level");
-      var secondLevelFunc = @async function() {
-        trace("called on a second level");
-        trace(this.a);
-      }
-      @await secondLevelFunc();
-    }
-
-    @await firstLevelFunc();
+  @async public function execute() {
+    @await testBasic();
+    @await testFuncWithCallback();
+    @await testArrowFunction();
+    @await testFunctionWithDefaultArgs();
+    @await testNestedFunction();
   }
 }
-
 
 class Tests {
   @async static public function main() {
     var cases = new Cases();
-    @await cases.hiFunc();
+    @await cases.execute();
   }
 }

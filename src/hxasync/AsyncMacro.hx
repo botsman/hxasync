@@ -289,8 +289,7 @@ class AsyncMacro {
 
   public static function getEmptyReturn(expr: Expr) {
     return {
-      expr: EReturn(macro
-        @:pos(expr.pos) return (null : hxasync.NoReturn)), // return Null
+      expr: EReturn(macro @:pos(expr.pos) return (null : hxasync.NoReturn)), // return Null
       pos: expr.pos
     };
   }
