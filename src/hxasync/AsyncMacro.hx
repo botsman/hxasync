@@ -287,6 +287,14 @@ class AsyncMacro {
     return null; // TODO: fix
   }
 
+  public static function getEmptyReturn(expr: Expr) {
+    return {
+      expr: EReturn(macro
+        @:pos(expr.pos) return (null : hxasync.NoReturn)), // return Null
+      pos: expr.pos
+    };
+  }
+
   public static function makeExplicitReturn(fun: Function) {
     switch fun.expr.expr {
       case EBlock(outerExprs):
@@ -294,31 +302,33 @@ class AsyncMacro {
         switch lastExpr.expr {
           case EBlock(exprs):
             var lastFunctionExpr = exprs[exprs.length - 1];
+            if (lastFunctionExpr == null) {
+              exprs.push(AsyncMacro.getEmptyReturn(lastExpr));
+              return;
+            }
             switch lastFunctionExpr.expr {
               case EReturn(e):
                 return;
               case EMeta(s, e):
-                // if (s.name == "await") {
-                //   exprs[exprs.length - 1] = {
-                //     expr: EReturn({
-                //       pos: lastFunctionExpr.pos,
-                //       // expr: lastFunctionExpr.expr  // return last awaited expression
-                //       expr: EReturn(macro @:pos(lastFunctionExpr.pos) return (null: hxasync.NoReturn))
-                //     }),
-                //     pos: lastFunctionExpr.pos
-                //   };
-                // }
-                exprs.push({
-                  expr: EReturn(macro
-                    @:pos(lastFunctionExpr.pos) return (null : hxasync.NoReturn)), // return Null
-                  pos: lastFunctionExpr.pos
-                });
+                exprs.push(AsyncMacro.getEmptyReturn(lastFunctionExpr));
               default:
-                exprs.push({
-                  expr: EReturn(macro
-                    @:pos(lastFunctionExpr.pos) return (null : hxasync.NoReturn)), // return Null
-                  pos: lastFunctionExpr.pos
-                });
+                exprs.push(AsyncMacro.getEmptyReturn(lastFunctionExpr));
+            }
+          case EMeta(s, e):
+            if (s.name != ":implicitReturn") {
+              return;
+            }
+            switch e.expr {
+              case EReturn(e):
+                switch e.expr {
+                  case EBlock(exprs):
+                    var lastFunctionExpr = exprs[exprs.length - 1];
+                    exprs.push(AsyncMacro.getEmptyReturn(lastFunctionExpr));
+                  default:
+                    null;
+                }
+              default:
+                null;
             }
           default:
             null;
