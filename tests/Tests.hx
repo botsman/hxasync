@@ -57,6 +57,7 @@ class Cases {
   }
 }
 
+@:expose
 class Tests {
   @async static public function main() {
     var cases = new Cases();

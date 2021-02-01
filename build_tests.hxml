@@ -12,15 +12,17 @@
 --next
 
 # python build
---python build/py/main.py
+--python build/py/tests.py
+--cmd cp tests/main.py build/py/
 
 --next
 
 # python sync build (macros meta tags are igored and no changes are made)
---python build/py_sync/main.py
+--python build/py_sync/tests.py
 -D sync
+--cmd cp tests/main_sync.py build/py_sync/
 
 --next
 
 # java (== other) build
---java build/java/
+# --java build/java/

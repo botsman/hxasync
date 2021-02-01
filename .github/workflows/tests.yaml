@@ -34,11 +34,13 @@ jobs:
       - name: Compile targets
         run: |
           haxelib dev hxasync `pwd`
+          haxe build_tests.hxml
 
       - name: Test Python
         run: |
-          echo "Running python tests"
+          python build/py/main.py
+          python build/py_sync/main_sync.py
 
       - name: Test NodeJS
         run: |
-          echo "Running NodeJS tests"
+          node build/js/main.js
