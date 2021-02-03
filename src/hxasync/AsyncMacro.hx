@@ -15,6 +15,7 @@ class AsyncMacro {
   public static var callbackRegistered: Bool = false;
   public static var notificationSent: Bool = false;
   public static var asyncPlaceholder = "%asyncPlaceholder%";
+  public static var noReturnPlaceholder = "%noReturnPlaceholder%";
 
   macro public static function build(): Array<Field> {
     var targetName = Context.definedValue("target.name");
@@ -176,7 +177,7 @@ class AsyncMacro {
     handleAny(fun.expr, isAsyncContext);
   }
 
-  public static function fixJavaScriptOutput(content: String): String {
+  public static function makeJSAsyncFunctions(content: String): String {
     var regex = new EReg('${asyncPlaceholder};\\s*', "gm");
     // split code by placeholder first (and remove extra newline to keep a code pretty)
     var codeParts = regex.split(content);
@@ -218,7 +219,18 @@ class AsyncMacro {
     return codeParts.join("");
   }
 
-  public static function fixPythonOutput(content: String): String {
+  public static function deleteJSEmptyReturn(content: String): String {
+    var emptyReturnRegex = new EReg('\\s*return ${AsyncMacro.noReturnPlaceholder};', "gm");
+    return emptyReturnRegex.replace(content, "");
+  }
+
+  public static function fixJSOutput(content: String): String {
+    content = makeJSAsyncFunctions(content);
+    content = deleteJSEmptyReturn(content);
+    return content;
+  }
+
+  public static function makePythonAsyncFunctions(content: String): String {
     var regex = new EReg('${asyncPlaceholder}\\s*', "gm");
     // split code by placeholder first (and remove extra newline to keep a code pretty)
     var codeParts = regex.split(content);
@@ -245,13 +257,24 @@ class AsyncMacro {
     return codeParts.join("");
   }
 
+  public static function deletePythonEmptyReturn(content: String): String {
+    var emptyReturnRegex = new EReg('\\s*return ${AsyncMacro.noReturnPlaceholder}', "gm");
+    return emptyReturnRegex.replace(content, "");
+  }
+
+  public static function fixPythonOutput(content: String): String {
+    content = makePythonAsyncFunctions(content);
+    content = deletePythonEmptyReturn(content);
+    return content;
+  }
+
   public static function onFinishCallback() {
     var sourceCodePath = Compiler.getOutput();
     var target = Context.definedValue("target.name");
     var regex: EReg;
     var sourceCode = File.getContent(sourceCodePath);
     if (target == "js") {
-      sourceCode = AsyncMacro.fixJavaScriptOutput(sourceCode);
+      sourceCode = AsyncMacro.fixJSOutput(sourceCode);
     } else if (target == "python") {
       sourceCode = AsyncMacro.fixPythonOutput(sourceCode);
     }
@@ -287,11 +310,34 @@ class AsyncMacro {
     return null; // TODO: fix
   }
 
-  public static function getEmptyReturn(expr: Expr) {
+  private static function getPythonEmptyReturn(expr: Expr): Expr {
     return {
-      expr: EReturn(macro @:pos(expr.pos) return (null : hxasync.NoReturn)), // return Null
+      expr: EReturn(
+        macro
+        @:pos(expr.pos) return (std.python.Syntax.code("%noReturnPlaceholder%"))
+      ),
       pos: expr.pos
     };
+  }
+
+  private static function getJSEmptyReturn(expr: Expr): Expr {
+    return {
+      expr: EReturn(
+        macro @:pos(expr.pos) return (std.js.Syntax.code("%noReturnPlaceholder%"))
+      ),
+      pos: expr.pos
+    };
+  }
+
+  public static function getEmptyReturn(expr: Expr): Expr {
+    return switch Context.definedValue("target.name") {
+      case "js":
+        getJSEmptyReturn(expr);
+      case "python":
+        getPythonEmptyReturn(expr);
+      default:
+        expr;
+    }
   }
 
   public static function makeExplicitReturn(fun: Function) {
@@ -302,16 +348,16 @@ class AsyncMacro {
           case EBlock(exprs):
             var lastFunctionExpr = exprs[exprs.length - 1];
             if (lastFunctionExpr == null) {
-              exprs.push(AsyncMacro.getEmptyReturn(lastExpr));
+              exprs.push(getEmptyReturn(lastExpr));
               return;
             }
             switch lastFunctionExpr.expr {
               case EReturn(e):
                 return;
               case EMeta(s, e):
-                exprs.push(AsyncMacro.getEmptyReturn(lastFunctionExpr));
+                exprs.push(getEmptyReturn(lastFunctionExpr));
               default:
-                exprs.push(AsyncMacro.getEmptyReturn(lastFunctionExpr));
+                exprs.push(getEmptyReturn(lastFunctionExpr));
             }
           case EMeta(s, e):
             if (s.name != ":implicitReturn") {
@@ -322,7 +368,7 @@ class AsyncMacro {
                 switch e.expr {
                   case EBlock(exprs):
                     var lastFunctionExpr = exprs[exprs.length - 1];
-                    exprs.push(AsyncMacro.getEmptyReturn(lastFunctionExpr));
+                    exprs.push(getEmptyReturn(lastFunctionExpr));
                   default:
                     null;
                 }
