@@ -29,18 +29,23 @@ class AsyncMacro {
     var fields = Context.getBuildFields();
     for (field in fields) {
       var meta = field.meta;
-      if (meta != null) {
-        for (data in meta) {
-          if (data.name == "async") {
-            switch field.kind {
-              case FFun(f):
-                transformToAsync(f);
-                handleAny(f.expr, true);
-              default:
-                throw "async can be applied only to a function field type";
-            }
-          }
+      var asyncContext = false;
+      for (data in meta) {
+        if (data.name == "async") {
+          asyncContext = true;
+          break;
         }
+      }
+      switch field.kind {
+        case FFun(f):
+          if (asyncContext) {
+            transformToAsync(f);
+          }
+          handleAny(f.expr, asyncContext);
+        default:
+          if (asyncContext) {
+            throw "async can be applied only to a function field type";
+          }
       }
     }
     return fields;
@@ -158,6 +163,18 @@ class AsyncMacro {
         handleAny(econd, isAsyncContext);
         handleAny(eif, isAsyncContext);
         handleAny(eelse, isAsyncContext);
+      case EUntyped(e):
+        handleAny(e, isAsyncContext);
+      case ETry(e, catches):
+        handleAny(e, isAsyncContext);
+        for (ctch in catches) {
+          handleAny(ctch.expr, isAsyncContext);
+        }
+      case EWhile(econd, e, normalWhile):
+        handleAny(econd, isAsyncContext);
+        handleAny(e, isAsyncContext);
+      case EBreak:
+        null;
       case null:
         null;
       case other:
@@ -166,13 +183,15 @@ class AsyncMacro {
   }
 
   public static function handleEFunction(fun: Function, kind: FunctionKind, isAsyncContext: Bool) {
-    switch kind {
-      case FNamed(name, inlined):
-        if (inlined) {
-          throw "Inline function can not be async";
-        }
-      default:
-        null;
+    if (isAsyncContext) {
+      switch kind {
+        case FNamed(name, inlined):
+          if (inlined) {
+            throw "Inline function can not be async";
+          }
+        default:
+          null;
+      }
     }
     handleAny(fun.expr, isAsyncContext);
   }
@@ -313,8 +332,7 @@ class AsyncMacro {
   private static function getPythonEmptyReturn(expr: Expr): Expr {
     return {
       expr: EReturn(
-        macro
-        @:pos(expr.pos) return (std.python.Syntax.code("%noReturnPlaceholder%"))
+        macro @:pos(expr.pos) return (std.python.Syntax.code("%noReturnPlaceholder%"))
       ),
       pos: expr.pos
     };
