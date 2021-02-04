@@ -44,7 +44,7 @@ class AsyncMacro {
           handleAny(f.expr, asyncContext);
         default:
           if (asyncContext) {
-            throw "async can be applied only to a function field type";
+            throw new Error("async can be applied only to a function field type", Context.currentPos());
           }
       }
     }
@@ -71,7 +71,7 @@ class AsyncMacro {
       case EMeta(s, e):
         if (s.name == "await") {
           if (!isAsyncContext) {
-            throw "await allowed only inside async function";
+            throw new Error("await allowed only inside async function", Context.currentPos());
           }
           transformToAwait(expr);
         } else if (s.name == "async") {
@@ -80,13 +80,13 @@ class AsyncMacro {
               transformToAsync(f);
               handleEFunction(f, kind, true);
             default:
-              throw "async only allowed to be used with functions";
+              throw new Error("async only allowed to be used with functions", Context.currentPos());
           }
         } else {
           handleAny(e, isAsyncContext);
         }
       default:
-        throw "Expr is not EMeta";
+        throw new Error("Expr is not EMeta", Context.currentPos());
     }
   }
 
@@ -178,7 +178,7 @@ class AsyncMacro {
       case null:
         null;
       case other:
-        throw 'Unexpected expression ${other}';
+        throw new Error('Unexpected expression ${other}', Context.currentPos());
     }
   }
 
@@ -187,7 +187,7 @@ class AsyncMacro {
       switch kind {
         case FNamed(name, inlined):
           if (inlined) {
-            throw "Inline function can not be async";
+            throw new Error("Inline function can not be async", Context.currentPos());
           }
         default:
           null;
@@ -429,7 +429,7 @@ class AsyncMacro {
         processAwaitedFuncArgs(metaE);
         e.expr = (macro hxasync.AsyncMacroUtils.await(${metaE})).expr;
       default:
-        throw "Invalid expression";
+        throw new Error("Invalid expression", Context.currentPos());
     }
   }
 }
