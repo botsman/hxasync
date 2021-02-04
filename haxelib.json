@@ -10,9 +10,9 @@
         "javascript"
     ],
     "description": "This library provides a macros to add 'async' and 'await' keywords for Python and JavaScript and does nothing for other platoforms.",
-    "version": "0.3.4",
+    "version": "0.3.5",
     "classPath": "src",
-    "releasenote": "Added Asyncable interface",
+    "releasenote": "Mare cases handled. Improve throwed errors",
     "contributors": [
         "botsman"
     ],
