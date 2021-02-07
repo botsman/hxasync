@@ -44,7 +44,7 @@ class AsyncMacro {
           handleAny(f.expr, asyncContext);
         default:
           if (asyncContext) {
-            throw new Error("async can be applied only to a function field type", Context.currentPos());
+            Context.error("async can be applied only to a function field type", field.pos);
           }
       }
     }
@@ -66,27 +66,27 @@ class AsyncMacro {
     return false;
   }
 
-  public static function handleEMeta(expr: Expr, isAsyncContext: Bool) {
+  public static inline function handleEMeta(expr: Expr, isAsyncContext: Bool) {
     switch expr.expr {
       case EMeta(s, e):
         if (s.name == "await") {
           if (!isAsyncContext) {
-            throw new Error("await allowed only inside async function", Context.currentPos());
+            Context.error("await allowed only inside async function", e.pos);
           }
           transformToAwait(expr);
         } else if (s.name == "async") {
           switch e.expr {
             case EFunction(kind, f):
               transformToAsync(f);
-              handleEFunction(f, kind, true);
+              handleEFunction(f, kind, true, e.pos);
             default:
-              throw new Error("async only allowed to be used with functions", Context.currentPos());
+              Context.error("async only allowed to be used with functions", e.pos);
           }
         } else {
           handleAny(e, isAsyncContext);
         }
       default:
-        throw new Error("Expr is not EMeta", Context.currentPos());
+        Context.error("Expr is not EMeta", expr.pos);
     }
   }
 
@@ -115,7 +115,7 @@ class AsyncMacro {
           handleAny(variable.expr, isAsyncContext);
         }
       case EFunction(kind, f):
-        handleEFunction(f, kind, false);
+        handleEFunction(f, kind, false, expr.pos);
       case EObjectDecl(fields):
         for (field in fields) {
           handleAny(field.expr, isAsyncContext);
@@ -178,16 +178,20 @@ class AsyncMacro {
       case null:
         null;
       case other:
-        throw new Error('Unexpected expression ${other}', Context.currentPos());
+        Context.error('Unexpected expression ${other}', expr.pos);
+        null;
     }
   }
 
-  public static function handleEFunction(fun: Function, kind: FunctionKind, isAsyncContext: Bool) {
+  public static function handleEFunction(fun: Function, kind: FunctionKind, isAsyncContext: Bool, pos: Position) {
     if (isAsyncContext) {
       switch kind {
         case FNamed(name, inlined):
           if (inlined) {
-            throw new Error("Inline function can not be async", Context.currentPos());
+            if (fun.expr != null) {
+              Context.error("Inline function can not be async", fun.expr.pos);
+            }
+            Context.error("Inline function can not be async", pos);
           }
         default:
           null;
@@ -429,7 +433,7 @@ class AsyncMacro {
         processAwaitedFuncArgs(metaE);
         e.expr = (macro hxasync.AsyncMacroUtils.await(${metaE})).expr;
       default:
-        throw new Error("Invalid expression", Context.currentPos());
+        Context.error("Invalid expression", e.pos);
     }
   }
 }
