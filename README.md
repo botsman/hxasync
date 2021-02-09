@@ -2,7 +2,8 @@
 
 Project is at very beginning. Probably a lot of bugs.
 
-This library allows you to add `async` and `await` keywords in Python and JavaScript code almost the same way you would do it in the native code.
+This library allows you to add `async` and `await` keywords in Python and JavaScript code almost the same way you would do it in the native code.  
+Theoretically, support of C# could be added since Haxe 4.2 if there is such a demand.  
 
 Example:  
 
