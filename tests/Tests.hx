@@ -59,8 +59,8 @@ class Cases {
 
 @:expose
 class Tests {
-  @async static public function main() {
+  static public function main() {
     var cases = new Cases();
-    @await cases.execute();
+    cases.execute();
   }
 }
