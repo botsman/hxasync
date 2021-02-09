@@ -1,5 +1,7 @@
 import asyncio
 
-from tests import tests_Tests
+from tests import tests_Cases
 
-asyncio.run(tests_Tests.main())
+cases = tests_Cases()
+cases.execute()
+asyncio.run(cases.execute())
