@@ -183,7 +183,12 @@ class AsyncMacro {
     }
   }
 
-  public static function handleEFunction(fun: Function, kind: FunctionKind, isAsyncContext: Bool, pos: Position) {
+  public static function handleEFunction(
+      fun: Function,
+      kind: FunctionKind,
+      isAsyncContext: Bool,
+      pos: Position
+  ) {
     if (isAsyncContext) {
       switch kind {
         case FNamed(name, inlined):
@@ -405,13 +410,29 @@ class AsyncMacro {
     }
   }
 
+  public static function getFunctionReturnType(fun: Function): Void {
+    switch fun.expr.expr {
+      case EBlock(exprs):
+        for (e in exprs) {
+          switch e.expr {
+            case EBlock(exprs):
+              null;
+            default:
+              null;
+          }
+        }
+      default:
+        null;
+    }
+  }
+
   /**
    * Modifies function body (by adding asyncPlaceholder) and (in future) changes return type from T to Promise<T>
    * @param {Function} fun -- Function to modify
    */
   public static function transformToAsync(fun: Function) {
     fun.expr = getModifiedPlatformFunctionBody(fun.expr);
-    fun.ret = getModifiedFunctionReturnType(fun.ret);
+    getFunctionReturnType(fun);
     makeExplicitReturn(fun);
   }
 
