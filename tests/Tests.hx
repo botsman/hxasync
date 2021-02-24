@@ -8,8 +8,9 @@ class Cases {
 
   public function new() {}
 
-  @async public static function testBasic(): Awaitable<String> {
-    return "basic func called";
+  @async public static function testBasic() {
+    // return "basic func called";
+    trace("asdsd");
   }
 
   // @async public static function testFuncWithCallback() {
@@ -51,7 +52,7 @@ class Cases {
   //   @await nestedFunction();
   // }
 
-  @async public function execute() {
+  public function execute() {
     testBasic();
     // @await testFuncWithCallback();
     // @await testArrowFunction();

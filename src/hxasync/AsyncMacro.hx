@@ -334,10 +334,6 @@ class AsyncMacro {
     }
   }
 
-  public static function getModifiedFunctionReturnType(ret: Null<ComplexType>): Null<ComplexType> {
-    return null; // TODO: fix
-  }
-
   private static function getPythonEmptyReturn(expr: Expr): Expr {
     return {
       expr: EReturn(
@@ -410,17 +406,40 @@ class AsyncMacro {
     }
   }
 
-  public static function getFunctionReturnType(fun: Function): Void {
-    switch fun.expr.expr {
-      case EBlock(exprs):
-        for (e in exprs) {
-          switch e.expr {
-            case EBlock(exprs):
-              null;
-            default:
-              null;
-          }
-        }
+  public static function inferReturnType(fun: Function): Null<ComplexType> {
+    if (fun.ret != null) {
+      return fun.ret;
+    }
+    var complexType =
+    try {
+      var typed = Context.typeExpr({expr: EFunction(null, fun), pos:fun.expr.pos});
+      typed.t.followWithAbstracts().toComplexType();
+    } catch (e) {
+      Context.error("Failed to infer return type", fun.expr.pos);
+      throw e;
+    };
+
+    return switch complexType {
+      case TFunction(args, ret):
+        ret;
+      default:
+        null;
+    }
+  }
+
+  public static function getModifiedFunctionReturnType(fun: Function) {
+    var returnType = inferReturnType(fun);
+    return switch returnType {
+      case null:
+        Context.error("Unable to identify function return type", fun.expr.pos);
+      // TPath({name: StdTypes, params: [], sub: Void, pos: #pos((unknown)), pack: []})
+      case TPath({name: "StdTypes", sub: "Void"}):
+        // Awaitable<NoReturn>;
+        trace("Void");
+      // TPath({name: String, params: [], pos: #pos((unknown)), pack: []})
+      case TPath(p):
+        // Awaitable<T>
+        trace("TPATH");
       default:
         null;
     }
@@ -431,8 +450,9 @@ class AsyncMacro {
    * @param {Function} fun -- Function to modify
    */
   public static function transformToAsync(fun: Function) {
+    // var a = returnType;
+    getModifiedFunctionReturnType(fun);
     fun.expr = getModifiedPlatformFunctionBody(fun.expr);
-    getFunctionReturnType(fun);
     makeExplicitReturn(fun);
   }
 

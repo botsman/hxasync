@@ -1,3 +1,3 @@
 package hxasync;
 
-abstract Awaitable<T>(T) {}
+abstract Awaitable<T>(T) from T {}
