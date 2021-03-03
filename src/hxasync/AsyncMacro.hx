@@ -115,7 +115,7 @@ class AsyncMacro {
           handleAny(variable.expr, isAsyncContext);
         }
       case EFunction(kind, f):
-        handleEFunction(f, kind, false, expr.pos);
+        handleEFunction(f, kind, isAsyncContext, expr.pos);
       case EObjectDecl(fields):
         for (field in fields) {
           handleAny(field.expr, isAsyncContext);
@@ -415,8 +415,7 @@ class AsyncMacro {
       var typed = Context.typeExpr({expr: EFunction(null, fun), pos:fun.expr.pos});
       typed.t.followWithAbstracts().toComplexType();
     } catch (e) {
-      Context.error("Failed to infer return type", fun.expr.pos);
-      throw e;
+      null;
     };
 
     return switch complexType {
@@ -430,17 +429,14 @@ class AsyncMacro {
   public static function getModifiedFunctionReturnType(fun: Function) {
     var returnType = inferReturnType(fun);
     return switch returnType {
-      case null:
-        Context.error("Unable to identify function return type", fun.expr.pos);
-      // TPath({name: StdTypes, params: [], sub: Void, pos: #pos((unknown)), pack: []})
       case TPath({name: "StdTypes", sub: "Void"}):
-        // Awaitable<NoReturn>;
-        trace("Void");
-      // TPath({name: String, params: [], pos: #pos((unknown)), pack: []})
+        macro: Awaitable<NoReturn>;
       case TPath(p):
-        // Awaitable<T>
-        trace("TPATH");
+        macro: Awaitable<$returnType>;
+      case null:
+        macro: Awaitable<NoReturn>;
       default:
+        trace('Unexpected return type: ${returnType}');
         null;
     }
   }
