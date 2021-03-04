@@ -455,7 +455,7 @@ class AsyncMacro {
   public static function processAwaitedFuncArgs(expr: Expr) {
     switch expr.expr {
       case ECall(e, params):
-        handleAny(e, false);
+        handleAny(e, true);
         for (param in params) {
           handleAny(param, false);
         }

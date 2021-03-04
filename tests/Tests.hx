@@ -1,70 +1,65 @@
 package tests;
 
 
-abstract Awaitable<T>(T) from T {}
 
 class Cases {
-  public var some = "some variable";
-
-  public function new() {}
+  public static var some = "some variable";
 
   @async public static function testBasic() {
-    // return "basic func called";
-    trace("asdsd");
+    return "basic func called";
   }
 
-  // @async public static function testFuncWithCallback() {
-  //   var callback = @async function callbackFunction() {
-  //     trace("callback is called");
-  //   }
-  //   var functionAcceptingCallback = @async function(callback) {
-  //     @await callback();
-  //   }
+  @async public static function testFuncWithCallback() {
+    var callback = @async function callbackFunction() {
+      trace("callback is called");
+    }
+    var functionAcceptingCallback = @async function(callback) {
+      @await callback();
+    }
 
-  //   @await functionAcceptingCallback(callback);
-  // }
+    @await functionAcceptingCallback(callback);
+  }
 
-  // @async public static function testArrowFunction() {
-  //   var arrowFunction = @async () -> {
-  //     trace("arrow function called");
-  //   }
+  @async public static function testArrowFunction() {
+    var arrowFunction = @async () -> {
+      trace("arrow function called");
+    }
 
-  //   @await arrowFunction();
-  // }
+    @await arrowFunction();
+  }
 
-  // @async public static function testFunctionWithDefaultArgs() {
-  //   var funcWithOneDefaultArg = @async function(a: String = "some") {
-  //     trace('Default arg: ${a}');
-  //   }
-  //   @await funcWithOneDefaultArg();
+  @async public static function testFunctionWithDefaultArgs() {
+    var funcWithOneDefaultArg = @async function(a: String = "some") {
+      trace('Default arg: ${a}');
+    }
+    @await funcWithOneDefaultArg();
 
-  //   var funcWithTwoDefaultArgs = @async function(a: String = "some", b: String = "another") {
-  //     trace('Default args: ${a} and ${b}');
-  //   }
-  //   @await funcWithTwoDefaultArgs();
-  // }
+    var funcWithTwoDefaultArgs = @async function(a: String = "some", b: String = "another") {
+      trace('Default args: ${a} and ${b}');
+    }
+    @await funcWithTwoDefaultArgs();
+  }
 
-  // @async public function testNestedFunction() {
-  //   var nestedFunction = @async function() {
-  //     trace(this.some);
-  //   }
+  @async public static function testNestedFunction() {
+    var nestedFunction = @async function() {
+      trace(Cases.some);
+    }
 
-  //   @await nestedFunction();
-  // }
+    @await nestedFunction();
+  }
 
-  public function execute() {
-    testBasic();
-    // @await testFuncWithCallback();
-    // @await testArrowFunction();
-    // @await testFunctionWithDefaultArgs();
-    // @await testNestedFunction();
+  @async public static function execute() {
+    @await testBasic();
+    @await testFuncWithCallback();
+    @await testArrowFunction();
+    @await testFunctionWithDefaultArgs();
+    @await testNestedFunction();
   }
 }
 
 @:expose
 class Tests {
   static public function main() {
-    var cases = new Cases();
-    cases.execute();
+    Cases.execute();
   }
 }
