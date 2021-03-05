@@ -115,7 +115,7 @@ class AsyncMacro {
           handleAny(variable.expr, isAsyncContext);
         }
       case EFunction(kind, f):
-        handleEFunction(f, kind, false, expr.pos);
+        handleEFunction(f, kind, isAsyncContext, expr.pos);
       case EObjectDecl(fields):
         for (field in fields) {
           handleAny(field.expr, isAsyncContext);
@@ -183,7 +183,12 @@ class AsyncMacro {
     }
   }
 
-  public static function handleEFunction(fun: Function, kind: FunctionKind, isAsyncContext: Bool, pos: Position) {
+  public static function handleEFunction(
+      fun: Function,
+      kind: FunctionKind,
+      isAsyncContext: Bool,
+      pos: Position
+  ) {
     if (isAsyncContext) {
       switch kind {
         case FNamed(name, inlined):
@@ -329,10 +334,6 @@ class AsyncMacro {
     }
   }
 
-  public static function getModifiedFunctionReturnType(ret: Null<ComplexType>): Null<ComplexType> {
-    return null; // TODO: fix
-  }
-
   private static function getPythonEmptyReturn(expr: Expr): Expr {
     return {
       expr: EReturn(
@@ -405,20 +406,55 @@ class AsyncMacro {
     }
   }
 
+  public static function inferReturnType(fun: Function): Null<ComplexType> {
+    if (fun.ret != null) {
+      return fun.ret;
+    }
+    var complexType =
+    try {
+      var typed = Context.typeExpr({expr: EFunction(null, fun), pos:fun.expr.pos});
+      typed.t.followWithAbstracts().toComplexType();
+    } catch (e) {
+      null;
+    };
+
+    return switch complexType {
+      case TFunction(args, ret):
+        ret;
+      default:
+        null;
+    }
+  }
+
+  public static function getModifiedFunctionReturnType(fun: Function) {
+    var returnType = inferReturnType(fun);
+    return switch returnType {
+      case TPath({name: "StdTypes", sub: "Void"}):
+        macro: hxasync.Abstracts.Awaitable<hxasync.Abstracts.NoReturn>;
+      case TPath(p):
+        macro: hxasync.Abstracts.Awaitable<$returnType>;
+      case null:
+        null;  // TODO: fix. Temporary fallback solution for cases when we failed to infer return type
+      default:
+        trace('Unexpected return type: ${returnType}');
+        macro: hxasync.Abstracts.Awaitable<$returnType>;
+    }
+  }
+
   /**
    * Modifies function body (by adding asyncPlaceholder) and (in future) changes return type from T to Promise<T>
    * @param {Function} fun -- Function to modify
    */
   public static function transformToAsync(fun: Function) {
+    fun.ret = getModifiedFunctionReturnType(fun);
     fun.expr = getModifiedPlatformFunctionBody(fun.expr);
-    fun.ret = getModifiedFunctionReturnType(fun.ret);
     makeExplicitReturn(fun);
   }
 
   public static function processAwaitedFuncArgs(expr: Expr) {
     switch expr.expr {
       case ECall(e, params):
-        handleAny(e, false);
+        handleAny(e, true);
         for (param in params) {
           handleAny(param, false);
         }

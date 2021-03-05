@@ -1,9 +1,12 @@
 package tests;
 
+
+
 class Cases {
   public var some = "some variable";
 
-  public function new() {}
+  public function new() {
+  }
 
   @async public static function testBasic() {
     return "basic func called";
@@ -40,15 +43,23 @@ class Cases {
     @await funcWithTwoDefaultArgs();
   }
 
-  @async public function testNestedFunction() {
+  @async public static function testNestedFunction() {
     var nestedFunction = @async function() {
-      trace(this.some);
+      trace("asd");
     }
 
     @await nestedFunction();
   }
 
-  @async public function execute() {
+  @async public function returnDynamic() {
+    var a = 10;
+    return {
+      a: a,
+      b: this.some
+    };
+  }
+
+  @async public static function execute() {
     @await testBasic();
     @await testFuncWithCallback();
     @await testArrowFunction();
@@ -61,6 +72,6 @@ class Cases {
 class Tests {
   static public function main() {
     var cases = new Cases();
-    cases.execute();
+    cases.returnDynamic();
   }
 }
