@@ -3,6 +3,8 @@
 This library allows you to add `async` and `await` keywords in Python and JavaScript code almost the same way you would do it in the native code.  
 Theoretically, support of C# could be added since Haxe 4.2 if there is such a demand.  
 
+Used internally for my personal projects.  
+
 Example:  
 
 Haxe source code
@@ -81,19 +83,19 @@ I tried to keep the implementation as close as possible to the native target pla
 
 ## Usage
 
-In order to start using this macros, you need to:
-1. Install the library: `haxelib install hxasync`
-2. Add the library to your project when compiling a project: `-lib hxasync`
-3. To enable `async` and `await` for your class:
-   - use build or autobuild macros: 
-   ```
-   @:build(hxasync.AsyncMacro.build())
-   class MyClass {}
-   ```
-   - implement `Asyncable` interface: 
-   ```
-   class MyClass implements hxasync.Asyncable {}
-   ```
-   - apply AsyncMacro to all classes in a specified package: `--macro hxasync.AsyncMacro.makeAsyncable("")`
+In order to start using this macros, you need to:  
+1. Install the library: `haxelib install hxasync`  
+2. Add the library to your project when compiling a project: `-lib hxasync`  
+3. To enable `async` and `await` for your class:  
+   - use build or autobuild macros:  
+   ```  
+   @:build(hxasync.AsyncMacro.build())  
+   class MyClass {}  
+   ```  
+   - implement `Asyncable` interface:     
+   ```  
+   class MyClass implements hxasync.Asyncable {}  
+   ```  
+   - apply AsyncMacro to all classes in a specified package: `--macro hxasync.AsyncMacro.makeAsyncable("")`  
 
 Project is inspired by [hx-jsasync](https://github.com/basro/hx-jsasync) library.  
