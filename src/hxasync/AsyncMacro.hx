@@ -430,11 +430,11 @@ class AsyncMacro {
     var returnType = inferReturnType(fun);
     return switch returnType {
       case TPath({name: "StdTypes", sub: "Void"}):
-        macro: Awaitable<NoReturn>;
+        macro: hxasync.Abstracts.Awaitable<hxasync.Abstracts.NoReturn>;
       case TPath(p):
-        macro: Awaitable<$returnType>;
+        macro: hxasync.Abstracts.Awaitable<$returnType>;
       case null:
-        macro: Awaitable<NoReturn>;
+        macro: hxasync.Abstracts.Awaitable<hxasync.Abstracts.NoReturn>;
       default:
         trace('Unexpected return type: ${returnType}');
         null;
@@ -446,8 +446,7 @@ class AsyncMacro {
    * @param {Function} fun -- Function to modify
    */
   public static function transformToAsync(fun: Function) {
-    // var a = returnType;
-    getModifiedFunctionReturnType(fun);
+    fun.ret = getModifiedFunctionReturnType(fun);
     fun.expr = getModifiedPlatformFunctionBody(fun.expr);
     makeExplicitReturn(fun);
   }
