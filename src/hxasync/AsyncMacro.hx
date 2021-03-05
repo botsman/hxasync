@@ -434,10 +434,10 @@ class AsyncMacro {
       case TPath(p):
         macro: hxasync.Abstracts.Awaitable<$returnType>;
       case null:
-        macro: hxasync.Abstracts.Awaitable<hxasync.Abstracts.NoReturn>;
+        null;  // TODO: fix. Temporary fallback solution for cases when we failed to infer return type
       default:
         trace('Unexpected return type: ${returnType}');
-        null;
+        macro: hxasync.Abstracts.Awaitable<$returnType>;
     }
   }
 

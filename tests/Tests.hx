@@ -3,7 +3,10 @@ package tests;
 
 
 class Cases {
-  public static var some = "some variable";
+  public var some = "some variable";
+
+  public function new() {
+  }
 
   @async public static function testBasic() {
     return "basic func called";
@@ -42,10 +45,18 @@ class Cases {
 
   @async public static function testNestedFunction() {
     var nestedFunction = @async function() {
-      trace(Cases.some);
+      trace("asd");
     }
 
     @await nestedFunction();
+  }
+
+  @async public function returnDynamic() {
+    var a = 10;
+    return {
+      a: a,
+      b: this.some
+    };
   }
 
   @async public static function execute() {
@@ -60,6 +71,7 @@ class Cases {
 @:expose
 class Tests {
   static public function main() {
-    Cases.execute();
+    var cases = new Cases();
+    cases.returnDynamic();
   }
 }
