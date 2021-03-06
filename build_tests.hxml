@@ -9,18 +9,18 @@
 -D js-es=6
 -D shallow-expose
 
-# --next
+--next
 
-# # python build
-# --python build/py/tests.py
-# --cmd cp tests/main.py build/py/
+# python build
+--python build/py/tests.py
+--cmd cp tests/main.py build/py/
 
-# --next
+--next
 
-# # python sync build (macros meta tags are igored and no changes are made)
-# --python build/py_sync/tests.py
-# -D sync
-# --cmd cp tests/main_sync.py build/py_sync/
+# python sync build (macros meta tags are igored and no changes are made)
+--python build/py_sync/tests.py
+-D sync
+--cmd cp tests/main_sync.py build/py_sync/
 
 # --next
 
