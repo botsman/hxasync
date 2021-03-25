@@ -435,8 +435,11 @@ class AsyncMacro {
         macro: hxasync.Abstracts.Awaitable<$returnType>;
       case null:
         null;  // TODO: fix. Temporary fallback solution for cases when we failed to infer return type
+      case TAnonymous(fields):
+        macro: hxasync.Abstracts.Awaitable<$returnType>;
       default:
         trace('Unexpected return type: ${returnType}');
+        trace(fun.expr.pos);
         macro: hxasync.Abstracts.Awaitable<$returnType>;
     }
   }
@@ -446,7 +449,10 @@ class AsyncMacro {
    * @param {Function} fun -- Function to modify
    */
   public static function transformToAsync(fun: Function) {
-    fun.ret = getModifiedFunctionReturnType(fun);
+    if (Context.definedValue("inferTypes") == "1") {
+      // Unstable feature
+      fun.ret = getModifiedFunctionReturnType(fun);
+    }
     fun.expr = getModifiedPlatformFunctionBody(fun.expr);
     makeExplicitReturn(fun);
   }
