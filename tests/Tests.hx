@@ -1,12 +1,9 @@
 package tests;
 
-
-
 class Cases {
   public var some = "some variable";
 
-  public function new() {
-  }
+  public function new() {}
 
   @async public static function testBasic() {
     return "basic func called";
@@ -51,6 +48,15 @@ class Cases {
     @await nestedFunction();
   }
 
+  @async public static function testBrackets() {
+    var nestedFunction = @async function() {
+      return {
+        a: 10
+      };
+    }
+    return (@await nestedFunction()).a;
+  }
+
   @async public function returnDynamic() {
     var a = 10;
     return {
@@ -65,6 +71,7 @@ class Cases {
     @await testArrowFunction();
     @await testFunctionWithDefaultArgs();
     @await testNestedFunction();
+    @await testBrackets();
   }
 }
 

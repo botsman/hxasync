@@ -66,14 +66,18 @@ class AsyncMacro {
     return false;
   }
 
-  public static inline function handleEMeta(expr: Expr, isAsyncContext: Bool) {
+  public static inline function handleEMeta(
+      expr: Expr,
+      isAsyncContext: Bool,
+      addParenthesis: Bool = false
+  ) {
     switch expr.expr {
       case EMeta(s, e):
         if (s.name == "await") {
           if (!isAsyncContext) {
             Context.error("await allowed only inside async function", e.pos);
           }
-          transformToAwait(expr);
+          transformToAwait(expr, addParenthesis);
         } else if (s.name == "async") {
           switch e.expr {
             case EFunction(kind, f):
@@ -121,7 +125,12 @@ class AsyncMacro {
           handleAny(field.expr, isAsyncContext);
         }
       case EParenthesis(e):
-        handleAny(e, isAsyncContext);
+        switch e.expr {
+          case EMeta(s, expr):
+            handleEMeta(e, isAsyncContext, true);
+          default:
+            handleAny(e, isAsyncContext);
+        }
       case ECheckType(e, t):
         handleAny(e, isAsyncContext);
       case EIf(econd, eif, eelse):
@@ -410,11 +419,11 @@ class AsyncMacro {
     if (fun.ret != null) {
       return fun.ret;
     }
-    var complexType =
-    try {
-      var typed = Context.typeExpr({expr: EFunction(null, fun), pos:fun.expr.pos});
+    var complexType = try {
+      var typed = Context.typeExpr({expr: EFunction(null, fun), pos: fun.expr.pos});
       typed.t.followWithAbstracts().toComplexType();
-    } catch (e) {
+    }
+    catch (e) {
       null;
     };
 
@@ -430,17 +439,21 @@ class AsyncMacro {
     var returnType = inferReturnType(fun);
     return switch returnType {
       case TPath({name: "StdTypes", sub: "Void"}):
-        macro: hxasync.Abstracts.Awaitable<hxasync.Abstracts.NoReturn>;
+        macro
+      : hxasync.Abstracts.Awaitable<hxasync.Abstracts.NoReturn>;
       case TPath(p):
-        macro: hxasync.Abstracts.Awaitable<$returnType>;
+        macro
+      : hxasync.Abstracts.Awaitable<$returnType>;
       case null:
-        null;  // TODO: fix. Temporary fallback solution for cases when we failed to infer return type
+        null; // TODO: fix. Temporary fallback solution for cases when we failed to infer return type
       case TAnonymous(fields):
-        macro: hxasync.Abstracts.Awaitable<$returnType>;
+        macro
+      : hxasync.Abstracts.Awaitable<$returnType>;
       default:
         trace('Unexpected return type: ${returnType}');
         trace(fun.expr.pos);
-        macro: hxasync.Abstracts.Awaitable<$returnType>;
+        macro
+      : hxasync.Abstracts.Awaitable<$returnType>;
     }
   }
 
@@ -469,11 +482,15 @@ class AsyncMacro {
     }
   }
 
-  public static function transformToAwait(e: Expr) {
+  public static function transformToAwait(e: Expr, addParenthesis: Bool) {
     switch (e.expr) {
       case EMeta(s, metaE):
         processAwaitedFuncArgs(metaE);
-        e.expr = (macro hxasync.AsyncMacroUtils.await(${metaE})).expr;
+        if (addParenthesis) {
+          e.expr = (macro hxasync.AsyncMacroUtils.awaitWithParenthesis(${metaE})).expr;
+        } else {
+          e.expr = (macro hxasync.AsyncMacroUtils.await(${metaE})).expr;
+        }
       default:
         Context.error("Invalid expression", e.pos);
     }
