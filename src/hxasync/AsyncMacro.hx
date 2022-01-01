@@ -95,7 +95,6 @@ class AsyncMacro {
   }
 
   public static function handleAny(expr: Expr, isAsyncContext: Bool) {
-    // TODO: handle more Expr types
     if (expr == null) {
       return null;
     }
@@ -110,6 +109,9 @@ class AsyncMacro {
         }
       case ECall(e, params):
         handleAny(e, isAsyncContext);
+        for (param in params) {
+          handleAny(param, isAsyncContext);
+        }
       case EConst(s):
         null;
       case EField(e, field):

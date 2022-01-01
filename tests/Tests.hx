@@ -57,6 +57,43 @@ class Cases {
     return (@await nestedFunction()).a;
   }
 
+  @async public static function testAnonymousStructure() {
+    var someAsyncFunction = @async function() {
+      return 1;
+    }
+    return {
+      a: @await someAsyncFunction()
+    }
+  }
+
+  @async public static function testAnonymousStructureInArray() {
+    var someAsyncFunction = @async function() {
+      return 1;
+    }
+    var arr: Array<Dynamic> = [];
+    arr.push({
+      a: @await someAsyncFunction()
+    });
+    return arr;
+  }
+
+  @async public static function testStringInterpolation() {
+    var someAsyncFunction = @async function() {
+      return 1;
+    }
+    return 'asd ${@await someAsyncFunction()}';
+  }
+
+  @async public static function testAsyncCallAsArgument() {
+    var someAsyncFunction = @async function() {
+      return 1;
+    }
+    var anotherFunction = function(arg: Int) {
+      return arg;
+    }
+    return anotherFunction(@await someAsyncFunction());
+  }
+
   @async public function returnDynamic() {
     var a = 10;
     return {
@@ -72,6 +109,10 @@ class Cases {
     @await testFunctionWithDefaultArgs();
     @await testNestedFunction();
     @await testBrackets();
+    @await testAnonymousStructure();
+    @await testAnonymousStructureInArray();
+    @await testStringInterpolation();
+    @await testAsyncCallAsArgument();
   }
 }
 
