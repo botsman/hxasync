@@ -86,7 +86,7 @@ I tried to keep the implementation as close as possible to the native target pla
 In order to start using this macros, you need to:  
 1. Install the library: `haxelib install hxasync`  
 2. Add the library to your project when compiling a project: `-lib hxasync`  
-3. To enable `async` and `await` for your class:  
+3. Do one of these to enable `async` and `await` feature for your class:  
    - use build or autobuild macros:  
    ```  
    @:build(hxasync.AsyncMacro.build())  
@@ -94,8 +94,9 @@ In order to start using this macros, you need to:
    ```  
    - implement `Asyncable` interface:     
    ```  
-   class MyClass implements hxasync.Asyncable {}  
+   class MyClass implements hxasync.Asyncable {}   
    ```  
-   - apply AsyncMacro to all classes in a specified package: `--macro hxasync.AsyncMacro.makeAsyncable("")`  
+   - apply AsyncMacro to all classes in a specified package:  
+   `--macro hxasync.AsyncMacro.makeAsyncable("")`  
 
 Project is inspired by [hx-jsasync](https://github.com/basro/hx-jsasync) library.  
