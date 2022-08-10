@@ -23,6 +23,28 @@ class AsyncMacroUtils {
     #end
   }
 
+  public static extern inline function awaitAll<T>(arg: Array<Awaitable<T>>): Array<T> {
+    #if js
+    return std.js.Syntax.code("await Promise.all({0})", arg);
+    #elseif python
+    std.python.Syntax.importModule("asyncio");
+    return std.python.Syntax.code("await asyncio.gather(*{0})", arg);
+    #else
+    return cast arg;
+    #end
+  }
+
+  public static extern inline function awaitAllWithParenthesis<T>(arg: Array<Awaitable<T>>): Array<T> {
+    #if js
+    return std.js.Syntax.code("(await Promise.all({0}))", arg);
+    #elseif python
+    std.python.Syntax.importModule("asyncio");
+    return std.python.Syntax.code("(await asyncio.gather(*{0}))", arg);
+    #else
+    return cast arg;
+    #end
+  }
+
   #if macro
   public static inline function count(text: String, char: String): Int {
     var counter = 0;

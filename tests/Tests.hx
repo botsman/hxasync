@@ -102,6 +102,20 @@ class Cases {
     };
   }
 
+  public static function listOfPromises(): Array<Dynamic> {
+    return [
+      testBasic(),
+      // testFuncWithCallback(), these are commented because to be able to add to the list, async function should not return Void
+      // testArrowFunction(),
+      // testFunctionWithDefaultArgs(),
+      // testNestedFunction(),
+      testBrackets(),
+      testAnonymousStructure(),
+      testAnonymousStructureInArray(),
+      testAsyncCallAsArgument()
+    ];
+  }
+
   @async public static function execute() {
     @await testBasic();
     @await testFuncWithCallback();
@@ -113,6 +127,8 @@ class Cases {
     @await testAnonymousStructureInArray();
     @await testStringInterpolation();
     @await testAsyncCallAsArgument();
+
+    var result = @awaitAll listOfPromises(); // ['basic func called', 10, {'a': 1}, [{'a': 1}], 1]
   }
 }
 
