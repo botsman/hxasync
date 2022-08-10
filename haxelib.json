@@ -9,10 +9,10 @@
         "js",
         "javascript"
     ],
-    "description": "This library provides a macros to add 'async' and 'await' keywords for Python and JavaScript and does nothing for other platoforms.",
-    "version": "1.1.3",
+    "description": "This library provides a macros to add 'async' and 'await' keywords for Python and JavaScript and does nothing for other platforms.",
+    "version": "1.1.4",
     "classPath": "src",
-    "releasenote": "Fix call with await function as an argument",
+    "releasenote": "Add awaitAll keyword for simultaneous awaiting of all promises in the array",
     "contributors": [
         "botsman"
     ],
