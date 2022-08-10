@@ -78,6 +78,11 @@ class AsyncMacro {
             Context.error("await allowed only inside async function", e.pos);
           }
           transformToAwait(expr, addParenthesis);
+         } else if (s.name == "awaitAll") {
+          if (!isAsyncContext) {
+            Context.error("awaitAll allowed only inside async function", e.pos);
+          }
+          transformToAwaitAll(expr, addParenthesis);
         } else if (s.name == "async") {
           switch e.expr {
             case EFunction(kind, f):
@@ -492,6 +497,20 @@ class AsyncMacro {
           e.expr = (macro hxasync.AsyncMacroUtils.awaitWithParenthesis(${metaE})).expr;
         } else {
           e.expr = (macro hxasync.AsyncMacroUtils.await(${metaE})).expr;
+        }
+      default:
+        Context.error("Invalid expression", e.pos);
+    }
+  }
+
+  public static function transformToAwaitAll(e: Expr, addParenthesis: Bool) {
+    switch (e.expr) {
+      case EMeta(s, metaE):
+        processAwaitedFuncArgs(metaE);
+        if (addParenthesis) {
+          e.expr = (macro hxasync.AsyncMacroUtils.awaitAllWithParenthesis(${metaE})).expr;
+        } else {
+          e.expr = (macro hxasync.AsyncMacroUtils.awaitAll(${metaE})).expr;
         }
       default:
         Context.error("Invalid expression", e.pos);
